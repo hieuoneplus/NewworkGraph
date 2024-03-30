@@ -1,0 +1,81 @@
+{
+	"requests" : [
+		{
+			"start": "5",
+			"end": "1",
+			"VNF":
+			[
+				"f2","f4","f3"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "2",
+			"end": "1",
+			"VNF":
+			[
+				"f4","f5","f3"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "2",
+			"end": "6",
+			"VNF":
+			[
+				"f1","f2","f3"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "9",
+			"end": "10",
+			"VNF":
+			[
+				"f2","f1","f4"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "10",
+			"end": "3",
+			"VNF":
+			[
+				"f1","f4","f3"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "7",
+			"end": "4",
+			"VNF":
+			[
+				"f2","f4","f3"
+			],
+			"cpu": 1.0,
+			"memory": 1.0,
+			"bandwidth": 1.0
+		},
+		{
+			"start": "7",
+			"end": "3",
+			"VNF":
+			[
+				"f2","f4","f3"
+			],
+			"cpu": 12.0,
+			"memory": 10.0,
+			"bandwidth": 100.0
+		}
+	]
+}
