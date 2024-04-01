@@ -5,6 +5,7 @@ import model.Individual;
 import model.NetworkGraph;
 import model.Request;
 import model.Vertex;
+import org.knowm.xchart.*;
 import service.CommonService;
 
 import java.util.*;
@@ -96,10 +97,12 @@ public class NSGA_II {
                     var index = duyet.getOption().get(rq);
                     if(index!=null && allPath.get(rq) != null) {
                         var size = allPath.get(rq).size() - 1;
-                        if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index > size ? size : index))) {
-                            count++;
-                        } else {
-                            temp = temp1; // Gán lại giá trị cho mảng tempGraph
+                        if(index < size) {
+                            if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index))) {
+                                count++;
+                            } else {
+                                temp = temp1; // Gán lại giá trị cho mảng tempGraph
+                            }
                         }
                     }
 
@@ -124,6 +127,20 @@ public class NSGA_II {
             ind.removeAll(temp);
         }
         ind.addAll(temp);
+
+        CommonService.Print(ind);
+    }
+
+    public static void divRankV2() {
+        int rank = 0;
+        List<Individual> temp = new ArrayList<>();
+        while (!ind.isEmpty()) {
+            temp.addAll(CommonService.nonDominatedRank(ind, rank));
+            rank++;
+            ind.removeAll(temp);
+        }
+        ind.addAll(temp);
+
         CommonService.Print(ind);
     }
 
@@ -240,6 +257,29 @@ public class NSGA_II {
         newPopulation.clear();
     }
 
+    public static void drawImg() {
+        XYChart chart = new XYChartBuilder().width(800).height(600).title("Pareto").xAxisTitle("RatioAccepted").yAxisTitle("Lb").build();
+        chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Scatter);
+
+        int rank = 0;
+        for(var i : ind) {
+            if(i.rank == rank) {
+                List<Double> Lb = new ArrayList<>();
+                List<Double> ratio = new ArrayList<>();
+                CommonService.draw(ind, Lb, ratio, rank);
+
+                // Thêm dữ liệu vào biểu đồ
+
+                    // Nếu không phải lần lặp đầu tiên, nối điểm hiện tại với điểm trước đó
+                chart.addSeries("Rank " + rank, ratio, Lb);
+
+
+                rank++;
+            }
+        }
+        new SwingWrapper<>(chart).displayChart();
+
+    }
 
 
 }

@@ -4,8 +4,17 @@ import model.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class CommonService {
+    public static void draw(List<Individual> list, List<Double> Lb, List<Double> ratio, int rank) {
+        for(int i=0; i<list.size();i++) {
+            if(list.get(i).rank == rank) {
+                Lb.add(Math.round(list.get(i).Lb * 1000.0) / 1000.0);
+                ratio.add(Math.round(list.get(i).ratioAccepted * 1000.0) / 1000.0);
+            }
+        }
+    }
 
     public static NetworkGraph convert2Graph(List<Vertex> vertexList, List<Edge> edgeList) {
         NetworkGraph networkGraph = new NetworkGraph();
@@ -103,6 +112,23 @@ public class CommonService {
         AtomicInteger rankSet = new AtomicInteger(rank);
         maxFxIndividuals.parallelStream().forEach(indivisual -> indivisual.setRank(rankSet.get()));
         return maxFxIndividuals;
+    }
+
+
+
+
+    public static List<Individual> nonDominatedRank(List<Individual> list, int rank) {
+        var rs = list.parallelStream()
+                .filter(pt -> list.stream().noneMatch(other -> dominates(other, pt)))
+                .collect(Collectors.toList());
+        rs.parallelStream().forEachOrdered(pt -> {
+            pt.setRank(rank);
+        });
+        return rs;
+    }
+
+    public static boolean dominates(Individual p, Individual q) {
+        return (p.Lb >= q.Lb && p.ratioAccepted >= q.ratioAccepted && (p.Lb > q.Lb || p.ratioAccepted > q.ratioAccepted));
     }
 
     /**

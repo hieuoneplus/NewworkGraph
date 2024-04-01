@@ -1,9 +1,7 @@
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import model.GraphInput;
-import model.ListRequest;
-import model.NetworkGraph;
+import model.*;
 import service.CommonService;
 import service.NSGA_II;
 
@@ -69,15 +67,21 @@ public class Main {
 
         NetworkGraph cloneGraph = graph.copy();
 
+        requests.getRequests().sort(Comparator.comparingDouble(Request::getBandwidth));
+
         NSGA_II.createFirstInd(graph, requests.getRequests());
         NSGA_II.createPopulation();
-        for(int i=0;i<100;i++) {
+        for(int i=0;i<10;i++) {
             NSGA_II.evaluate(cloneGraph);
-            NSGA_II.divRank();
+//            NSGA_II.divRank();
+            NSGA_II.divRankV2();
             NSGA_II.filter();
             NSGA_II.hybrid();
             NSGA_II.mutation();
         }
+        NSGA_II.evaluate(cloneGraph);
+        NSGA_II.divRankV2();
+        NSGA_II.drawImg();
 
     }
 }
