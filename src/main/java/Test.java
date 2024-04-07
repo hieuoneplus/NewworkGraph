@@ -1,5 +1,7 @@
 import org.knowm.xchart.*;
 
+import java.util.Random;
+
 public class Test {
     public static void main(String[] args) {
         double[] xData = new double[]{1.0, 2.0, 3.0, 4.0, 5.0};
@@ -13,6 +15,9 @@ public class Test {
         chart.addSeries("Dữ liệu", xData, yData);
 
         // Hiển thị đồ thị
-        new SwingWrapper<>(chart).displayChart();
+//        new SwingWrapper<>(chart).displayChart();
+
+        Random n = new Random();
+        System.out.println(n.nextInt(3));
     }
 }

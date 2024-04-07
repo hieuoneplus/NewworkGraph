@@ -14,6 +14,8 @@ import java.util.Queue;
 
 @NoArgsConstructor
 public class Request {
+    @JsonProperty("id")
+    private String id;
     @JsonProperty("start")
     private String start;
     @JsonProperty("end")
@@ -27,7 +29,8 @@ public class Request {
     @JsonProperty("bandwidth")
     private Double bandwidth;
 
-    public Request(String start, String end, Queue<String> VNF, double cpu, double memory, double bandwidth) {
+    public Request(String id, String start, String end, Queue<String> VNF, double cpu, double memory, double bandwidth) {
+        this.id = id;
         this.start = start;
         this.end = end;
         this.VNF = VNF;
@@ -82,5 +85,13 @@ public class Request {
 
     public void setBandwidth(Double bandwidth) {
         this.bandwidth = bandwidth;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

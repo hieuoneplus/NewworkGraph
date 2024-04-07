@@ -4,6 +4,8 @@ import model.NetworkGraph;
 import model.Request;
 import model.Vertex;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class GetKPath {
@@ -13,12 +15,12 @@ public class GetKPath {
         }
         System.out.println();
     }
-    public static void getMorePath(List<List<Vertex>> path) {
+    public static void getMorePath(List<List<Vertex>> path, BufferedWriter w) throws IOException {
         for(var lsit : path) {
             for(var c : lsit) {
-                System.out.print(c.getLabel() + " ");
+                w.write(c.getLabel() + " ");
             }
-            System.out.println();
+            w.newLine();
         }
 
     }

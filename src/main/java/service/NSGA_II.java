@@ -8,6 +8,7 @@ import model.Vertex;
 import org.knowm.xchart.*;
 import service.CommonService;
 
+import java.io.*;
 import java.util.*;
 
 public class NSGA_II {
@@ -96,7 +97,7 @@ public class NSGA_II {
                     NetworkGraph temp1 = temp.copy();
                     var index = duyet.getOption().get(rq);
                     if(index!=null && allPath.get(rq) != null) {
-                        var size = allPath.get(rq).size() - 1;
+                        var size = allPath.get(rq).size();
                         if(index < size) {
                             if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index))) {
                                 count++;
@@ -271,7 +272,7 @@ public class NSGA_II {
                 // Thêm dữ liệu vào biểu đồ
 
                     // Nếu không phải lần lặp đầu tiên, nối điểm hiện tại với điểm trước đó
-                chart.addSeries("Rank " + rank, ratio, Lb);
+                chart.addSeries("Rank " + rank, ratio, Lb);//.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
 
 
                 rank++;
@@ -280,7 +281,23 @@ public class NSGA_II {
         new SwingWrapper<>(chart).displayChart();
 
     }
+    public static void printPathToFile(String filePath) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            for (Map.Entry<Request, List<List<Vertex>>> each : allPath.entrySet()) {
+                // In ra ID của yêu cầu
+                writer.write("Request id " + each.getKey().getId());
+                writer.newLine();
 
+                // In ra các đường đi cho từng yêu cầu sử dụng phương thức getMorePath()
+                GetKPath.getMorePath(each.getValue(), writer);
 
+                // In ra dấu phân cách sau mỗi lần lặp
+                writer.write("---------------");
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
