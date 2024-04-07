@@ -29,8 +29,11 @@ public class CommonService {
     public static void Print(List<Individual> ind) {
         ind.parallelStream().forEachOrdered(pt -> {
             if(pt.getRank() == 0) {
+//                if(pt.Lb == 1.0) {
+//                    System.out.print(pt.getOption().values() + " ");
+//                }
                 System.out.print(Math.round(pt.getFx()*10000.0)/10000.0 + " ");
-//            System.out.print(pt.getOption().values() + " ");
+
             }
         });
         System.out.println();

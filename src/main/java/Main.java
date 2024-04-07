@@ -71,7 +71,8 @@ public class Main {
 
         NSGA_II.createFirstInd(graph, requests.getRequests());
         NSGA_II.createPopulation();
-        for(int i=0;i<10;i++) {
+        NSGA_II.printPathToFile("src/main/resources/path.txt");
+        for(int i=0;i<100;i++) {
             NSGA_II.evaluate(cloneGraph);
 //            NSGA_II.divRank();
             NSGA_II.divRankV2();
