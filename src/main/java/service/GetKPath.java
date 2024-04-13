@@ -24,6 +24,14 @@ public class GetKPath {
         }
 
     }
+    public static void getMorePathV2(List<List<Vertex>> path) {
+        for(var lsit : path) {
+            for(var c : lsit) {
+                System.out.print(c.getLabel() + " ");
+            }
+            System.out.println();
+        }
+    }
     public static List<List<Vertex>> getV2(NetworkGraph graph, Request rq) {
         long startTime = System.nanoTime();
         FindPath ag = new FindPath();

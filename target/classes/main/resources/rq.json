@@ -20,9 +20,9 @@
 			[
 				"f4","f5","f3"
 			],
-			"cpu": 10.0,
-			"memory": 10.0,
-			"bandwidth": 10.0
+			"cpu": 6.0,
+			"memory": 5.0,
+			"bandwidth": 8.0
 		},
 		{
 			"id": "3",
@@ -32,9 +32,9 @@
 			[
 				"f1","f2","f3"
 			],
-			"cpu": 10.0,
+			"cpu": 14.0,
 			"memory": 10.0,
-			"bandwidth": 10.0
+			"bandwidth": 11.0
 		},
 		{
 			"id": "4",
@@ -44,9 +44,9 @@
 			[
 				"f2","f1","f4"
 			],
-			"cpu": 10.0,
-			"memory": 10.0,
-			"bandwidth": 10.0
+			"cpu": 6.0,
+			"memory": 7.0,
+			"bandwidth": 9.0
 		},
 		{
 			"id": "5",
@@ -56,9 +56,9 @@
 			[
 				"f1","f4","f3"
 			],
-			"cpu": 10.0,
-			"memory": 10.0,
-			"bandwidth": 10.0
+			"cpu": 5.0,
+			"memory": 4.0,
+			"bandwidth": 8.0
 		},
 		{
 			"id": "6",
@@ -68,9 +68,9 @@
 			[
 				"f2","f4","f3"
 			],
-			"cpu": 10.0,
-			"memory": 10.0,
-			"bandwidth": 10.0
+			"cpu": 9.0,
+			"memory": 6.0,
+			"bandwidth": 8.0
 		},
 		{
 			"id": "7",
@@ -80,9 +80,45 @@
 			[
 				"f2","f4","f3"
 			],
-			"cpu": 20.0,
-			"memory": 10.0,
+			"cpu": 15.0,
+			"memory": 12.0,
 			"bandwidth": 10.0
+		},
+		{
+			"id": "8",
+			"start": "4",
+			"end": "3",
+			"VNF":
+			[
+				"f2","f4","f3"
+			],
+			"cpu": 8.0,
+			"memory": 7.0,
+			"bandwidth": 9.0
+		},
+		{
+			"id": "9",
+			"start": "2",
+			"end": "3",
+			"VNF":
+			[
+				"f1","f4","f3"
+			],
+			"cpu": 9.0,
+			"memory": 13.0,
+			"bandwidth": 12.0
+		},
+		{
+			"id": "10",
+			"start": "9",
+			"end": "1",
+			"VNF":
+			[
+				"f2","f5","f4"
+			],
+			"cpu": 7.0,
+			"memory": 5.0,
+			"bandwidth": 8.0
 		}
 	]
 }

@@ -22,30 +22,32 @@ public class NetworkGraph {
         NetworkGraph newGraph = new NetworkGraph();
 
         // Sao chép vertexMap
-        for (Map.Entry<String, Vertex> entry : vertexMap.entrySet()) {
+        for (Map.Entry<String, Vertex> entry : this.vertexMap.entrySet()) {
             String key = entry.getKey();
             Vertex value = entry.getValue().copy(); // Assume model.Vertex has a copy method
             newGraph.vertexMap.put(key, value);
         }
 
         // Sao chép edgeMap
-        for (Map.Entry<Vertex, Map<Vertex, Edge>> entry : edgeMap.entrySet()) {
-            Vertex key = newGraph.getVertex(entry.getKey().getLabel()); // Assume model.Vertex has a copy method
+        for (Map.Entry<Vertex, Map<Vertex, Edge>> entry : this.edgeMap.entrySet()) {
+
+            Vertex key = newGraph.vertexMap.get(entry.getKey().getLabel()); // Assume model.Vertex has a copy method
             Map<Vertex, Edge> innerMap = entry.getValue();
             Map<Vertex, Edge> newInnerMap = new HashMap<>();
             for (Map.Entry<Vertex, Edge> innerEntry : innerMap.entrySet()) {
-                Vertex innerKey = newGraph.getVertex(innerEntry.getKey().getLabel()); // Assume model.Vertex has a copy method
-                Edge innerValue = new Edge(); // Assume model.Edge has a copy method
-                innerValue.setBandwidth(innerEntry.getValue().getBandwidth());
-                innerValue.setV1(innerEntry.getValue().getV1());
-                innerValue.setV2(innerEntry.getValue().getV2());
+                Vertex innerKey = newGraph.vertexMap.get(innerEntry.getKey().getLabel());
+                Edge innerValue = innerEntry.getValue().copy();//new Edge();
+//                innerValue.setBandwidth(innerEntry.getValue().getBandwidth());
+//                innerValue.setV1(innerEntry.getValue().getV1());
+//                innerValue.setV2(innerEntry.getValue().getV2());
                 newInnerMap.put(innerKey, innerValue);
             }
             newGraph.edgeMap.put(key, newInnerMap);
+
         }
-        newGraph.allCpu = allCpu.doubleValue();
-        newGraph.allMemory = allMemory.doubleValue();
-        newGraph.allBandwidth = allBandwidth.doubleValue();
+        newGraph.allCpu = this.allCpu.doubleValue();
+        newGraph.allMemory = this.allMemory.doubleValue();
+        newGraph.allBandwidth = this.allBandwidth.doubleValue();
         return newGraph;
     }
 
@@ -63,17 +65,21 @@ public class NetworkGraph {
         Vertex v1 = vertexMap.get(label1);
         Vertex v2 = vertexMap.get(label2);
         if (v1 == null || v2 == null) {
-            System.out.println("Không thể thêm cạnh vì một hoặc cả hai đỉnh không tồn tại.");
+//            System.out.println("Không thể thêm cạnh vì một hoặc cả hai đỉnh không tồn tại.");
             return;
         }
         if (!edgeMap.containsKey(v1)) {
             Map<Vertex, Edge> canh1 = new HashMap<>();
             var edge = new Edge(v1.label, v2.label, bandwidth);
             canh1.put(v2, edge);
-            Map<Vertex, Edge> canh2 = new HashMap<>();
-            canh2.put(v1, edge);
+            if(!edgeMap.containsKey(v2)) {
+                Map<Vertex, Edge> canh2 = new HashMap<>();
+                canh2.put(v1, edge);
+                edgeMap.put(v2, canh2);
+            } else {
+                edgeMap.get(v2).put(v1, edge);
+            }
             edgeMap.put(v1, canh1);
-            edgeMap.put(v2, canh2);
             addSuccess = true;
         } else if (!edgeMap.get(v1).containsKey(v2)) {
             var edge = new Edge(v1.label, v2.label, bandwidth);
@@ -84,7 +90,7 @@ public class NetworkGraph {
             edgeMap.get(v2).put(v1, edge);
             addSuccess = true;
         } else {
-            System.out.println("Cạnh đã tồn tại.");
+//            System.out.println("Cạnh đã tồn tại.");
         }
         if(addSuccess) {
             allBandwidth += bandwidth;
@@ -123,15 +129,15 @@ public class NetworkGraph {
         if (edgeMap.get(v1) != null) {
             allBandwidth -= edgeMap.get(v1).get(v2).getBandwidth();
             edgeMap.get(v1).remove(v2);
-            if (edgeMap.get(v1).size() == 0) {
-                edgeMap.remove(v1);
-            }
+//            if (edgeMap.get(v1).size() == 0) {
+//                edgeMap.remove(v1);
+//            }
         }
         if (edgeMap.get(v2) != null) {
             edgeMap.get(v2).remove(v1);
-            if (edgeMap.get(v2).size() == 0) {
-                edgeMap.remove(v2);
-            }
+//            if (edgeMap.get(v2).size() == 0) {
+//                edgeMap.remove(v2);
+//            }
         }
     }
     public void editBandWidth(String label1, String label2, double bandwidth) {

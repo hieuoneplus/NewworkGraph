@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.*;
 
 public class NSGA_II {
+
     public static Random ran = new Random();
 
     public static List<Request> groupRq;
@@ -26,6 +27,7 @@ public class NSGA_II {
     public static int allRequest = 0;
 
     public static List<Request> cloneGr;
+    public static List<Individual> copyGen;
 
     // Khoi tao ca the dau tien va cac duong di cua cac request
     public static void createFirstInd(NetworkGraph graph, List<Request> group) {
@@ -188,7 +190,7 @@ public class NSGA_II {
         });
         newPopulation.parallelStream().forEachOrdered(pt -> {
             Random rnn = new Random();
-//            if(rnn.nextInt(2)==0) {
+            if(rnn.nextInt(100)<Constants.ratioHyrid) {
                 int out = 0;
                 int cha = newPopulation.indexOf(pt);
                 int me;
@@ -220,24 +222,26 @@ public class NSGA_II {
 
 
                 if (!tapnghiem.contains(map1)) {
+                    tapnghiem.add(map1);
                     in1.setOption(map1);
                     ind.add(in1);
                 }
                 if (!tapnghiem.contains(map2)) {
+                    tapnghiem.add(map2);
                     in2.setOption(map2);
                     ind.add(in2);
                 }
-//            }
+            }
         });
-
+        copyGen = new ArrayList<>(ind);
 
     }
 
     //dot bien
     public static void mutation() {
-        newPopulation.parallelStream().forEachOrdered(pt -> {
+        copyGen.parallelStream().forEachOrdered(pt -> {
             Random rann = new Random();
-//            if(rann.nextInt(2) == 0) {
+            if(rann.nextInt(100) <= Constants.ratioMutation) {
                 var bit = rann.nextInt(groupRq.size());
                 int bitTemp;
                 do {
@@ -250,8 +254,11 @@ public class NSGA_II {
                 evol.getOption().put(groupRq.get(bit), index);
                 evol.getOption().put(groupRq.get(bitTemp), indexSwap);
 
-                ind.add(evol);
-//            }
+                if(!tapnghiem.contains(evol.getOption())) {
+                    tapnghiem.add(evol.getOption());
+                    ind.add(evol);
+                }
+            }
 
         });
         ind.addAll(newPopulation);
@@ -283,17 +290,19 @@ public class NSGA_II {
     }
     public static void printPathToFile(String filePath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            for (Map.Entry<Request, List<List<Vertex>>> each : allPath.entrySet()) {
-                // In ra ID của yêu cầu
-                writer.write("Request id " + each.getKey().getId());
-                writer.newLine();
+            for (var rq : groupRq) {
+                if(allPath.containsKey(rq)) {
+                    // In ra ID của yêu cầu
+                    writer.write("Request id " + rq.getId());
+                    writer.newLine();
 
-                // In ra các đường đi cho từng yêu cầu sử dụng phương thức getMorePath()
-                GetKPath.getMorePath(each.getValue(), writer);
+                    // In ra các đường đi cho từng yêu cầu sử dụng phương thức getMorePath()
+                    GetKPath.getMorePath(allPath.get(rq), writer);
 
-                // In ra dấu phân cách sau mỗi lần lặp
-                writer.write("---------------");
-                writer.newLine();
+                    // In ra dấu phân cách sau mỗi lần lặp
+                    writer.write("---------------");
+                    writer.newLine();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

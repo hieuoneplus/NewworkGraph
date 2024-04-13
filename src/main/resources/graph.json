@@ -3,8 +3,8 @@
       {
         "label": "1",
         "function": [],
-        "memory": "50.0",
-        "cpu": "60.0"
+        "memory": "100.0",
+        "cpu": "100.0"
       },
       {
         "label": "2",
@@ -15,8 +15,8 @@
       {
         "label": "3",
         "function": [],
-        "memory": "50.0",
-        "cpu": "60.0"
+        "memory": "100.0",
+        "cpu": "100.0"
       },
       {
         "label": "4",
@@ -27,7 +27,7 @@
       {
         "label": "5",
         "function": [],
-        "memory": "50.0",
+        "memory": "100.0",
         "cpu": "60.0"
       },
       {
