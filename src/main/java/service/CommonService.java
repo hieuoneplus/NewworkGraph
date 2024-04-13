@@ -27,10 +27,11 @@ public class CommonService {
         return networkGraph;
     }
     public static void Print(List<Individual> ind) {
+        System.out.println(ind.size());
         ind.parallelStream().forEachOrdered(pt -> {
             if(pt.getRank() == 0) {
 //                if(pt.Lb == 1.0) {
-//                    System.out.print(pt.getOption().values() + " ");
+                    System.out.print(pt.getOption().values() + " ");
 //                }
                 System.out.print(Math.round(pt.getFx()*10000.0)/10000.0 + " ");
 
@@ -196,12 +197,15 @@ public class CommonService {
                     var cc = cloneGraph.edgeMap.get(node1);
                     Edge edge = cloneGraph.edgeMap.get(node1).get(vertex);
                     if (!listEdge.contains(edge)) {
-                        if (edge.getBandwidth() >= rq.getBandwidth()) {
-                            edge.setBandwidth(edge.getBandwidth() - rq.getBandwidth());
-                            listEdge.add(edge);
-                            cloneGraph.allBandwidth -= rq.getBandwidth();
+                        try {
+                            if (edge.getBandwidth() >= rq.getBandwidth()) {
+                                edge.setBandwidth(edge.getBandwidth() - rq.getBandwidth());
+                                listEdge.add(edge);
+                                cloneGraph.allBandwidth -= rq.getBandwidth();
+                            }
+                        } catch (NullPointerException e) {
+                            System.out.println("error: " + node1.label + " " + vertex.label + " " + rq.getId());
                         }
-
                     }
                 }
                 vertexConnect.push(vertex);
@@ -210,5 +214,25 @@ public class CommonService {
         }
 
         return true;
+    }
+
+    public static void checkGraph(NetworkGraph graph, NetworkGraph cloneGraph) {
+        int sum =0;
+        for(Map.Entry<Vertex, Map<Vertex, Edge>> c : graph.edgeMap.entrySet()) {
+            sum+=c.getValue().size();
+        }
+        int sumQ =0;
+        for(Map.Entry<Vertex, Map<Vertex, Edge>> c : cloneGraph.edgeMap.entrySet()) {
+            sumQ+=c.getValue().size();
+        }
+        System.out.println("clone " + sumQ);
+        System.out.println("graph " + " " + sum);
+
+
+        for(Map.Entry<Vertex, Map<Vertex, Edge>> c : graph.edgeMap.entrySet()) {
+            var hieu = c.getValue().size() - cloneGraph.edgeMap.get(cloneGraph.vertexMap.get(c.getKey().getLabel())).size();
+            System.out.println("node " + c.getKey().label + " " + hieu);
+
+        }
     }
 }

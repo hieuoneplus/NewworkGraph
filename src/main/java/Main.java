@@ -1,14 +1,11 @@
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import model.*;
-import service.CommonService;
-import service.NSGA_II;
+import service.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
+
+
 public class Main {
+    //Run với bộ cogent quá tải
     public static void main(String[] args) {
 //        NetworkGraph graph = new NetworkGraph();
 //        ArrayList<String> s = new ArrayList<>();
@@ -49,32 +46,51 @@ public class Main {
 
 
 
-        ListRequest requests = null;
-        GraphInput input = null;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            // Đọc tệp JSON vào một đối tượng model.Request
-                requests = mapper.readValue(new File("src/main/resources/rq.json"), new TypeReference<>() {
-            });
-                input = mapper.readValue(new File("src/main/resources/graph.json"), new TypeReference<>() {
-                });
+//        ListRequest requests = null;
+//        GraphInput input = null;
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            // Đọc tệp JSON vào một đối tượng model.Request
+//                requests = mapper.readValue(new File("src/main/resources/rq.json"), new TypeReference<>() {
+//            });
+//                input = mapper.readValue(new File("src/main/resources/graph.json"), new TypeReference<>() {
+//                });
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        var graph = CommonService.convert2Graph(input.getVertexList(), input.getEdgeList());
+//
+//        var cloneGraph = graph.copy();
+//        requests.getRequests().sort(Comparator.comparingDouble(request -> {
+//            double wCpu = 1.0;
+//            double wMemory = 1.0;
+//            double wBandwidth = 1.0;
+//
+//            // Tính tổng tài nguyên theo công thức
+//            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
+//        }));
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        var graph = DataTxt.getNetwork("src/main/resources/network/conus_uniform_0_network.txt");
+        var requests = DataTxt.getRequest("src/main/resources/request/conus_uniform_0_30requests.txt");
+        requests.sort(Comparator.comparingDouble(request -> {
+            double wCpu = 1.0;
+            double wMemory = 1.0;
+            double wBandwidth = 1.0;
 
-        var graph = CommonService.convert2Graph(input.getVertexList(), input.getEdgeList());
+            // Tính tổng tài nguyên theo công thức
+            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
+        }));
+        var cloneGraph = graph.copy();
 
-        NetworkGraph cloneGraph = graph.copy();
 
-        requests.getRequests().sort(Comparator.comparingDouble(Request::getBandwidth));
 
-        NSGA_II.createFirstInd(graph, requests.getRequests());
+        NSGA_II.createFirstInd(graph, requests);
         NSGA_II.createPopulation();
         NSGA_II.printPathToFile("src/main/resources/path.txt");
         for(int i=0;i<100;i++) {
             NSGA_II.evaluate(cloneGraph);
-//            NSGA_II.divRank();
             NSGA_II.divRankV2();
             NSGA_II.filter();
             NSGA_II.hybrid();

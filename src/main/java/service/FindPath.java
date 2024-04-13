@@ -15,10 +15,14 @@ public class FindPath {
         Map<Vertex, Edge> distance = new HashMap<>();
         Map<Vertex, Vertex> previous = new HashMap<>();
         Vertex targetName = null;
+
+        graph.vertexMap.values().parallelStream().forEachOrdered(v -> {
+            if (!v.label.equals(sourceName.label)) {
+                distance.put(v, new Edge(sourceName.label, sourceName.label, Double.POSITIVE_INFINITY));
+            }
+        });
+        distance.put(sourceName, new Edge(sourceName.label, sourceName.label, 0.0));
         PriorityQueue<Vertex> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(v -> distance.get(v).getBandwidth()));
-
-        distance.put(sourceName, new Edge(sourceName.label,sourceName.label, 0.0));
-
         priorityQueue.add(sourceName);
 
         while (!priorityQueue.isEmpty()) {
@@ -31,20 +35,8 @@ public class FindPath {
             for (Map.Entry<Vertex, Edge> neighborEntry : graph.edgeMap.get(current).entrySet()) {
                 var neighbor = neighborEntry.getKey();
                 double newDistance = distance.get(current).getBandwidth() + neighborEntry.getValue().getBandwidth();
-                if(!distance.containsKey(neighbor)) {
-                    if(graph.edgeMap.get(current).get(neighbor).getBandwidth() >= rq.getBandwidth()
-                        && neighbor.getCpu() >= rq.getCpu()
-                        && neighbor.getMemory() >= rq.getMemory()) {
-                        distance.put(neighbor, new Edge(current.label, neighbor.label, newDistance));
-                        previous.put(neighbor, current);
-                        priorityQueue.add(neighbor);
-                    }
-                }
-                else if (newDistance < distance.get(neighbor).getBandwidth()
-                        && graph.edgeMap.get(current).get(neighbor).getBandwidth() >= rq.getBandwidth()
-                        && neighbor.getCpu() >= rq.getCpu()
-                        && neighbor.getMemory() >= rq.getMemory()) {
-                    distance.put(neighbor, new Edge(current.label, neighbor.label,newDistance));
+                if (newDistance < distance.get(neighbor).getBandwidth()) {
+                    distance.put(neighbor, new Edge(current.label, neighbor.label, newDistance));
                     previous.put(neighbor, current);
                     priorityQueue.add(neighbor);
                 }
@@ -73,14 +65,19 @@ public class FindPath {
     public List<Vertex> dijkstraShortestPath(NetworkGraph graph, Request rq, Vertex sourceName, Vertex targetName) {
         Map<Vertex, Edge> distance = new HashMap<>();
         Map<Vertex, Vertex> previous = new HashMap<>();
-        PriorityQueue<Vertex> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(v -> distance.get(v).getBandwidth()));
 
+        graph.vertexMap.values().parallelStream().forEachOrdered(v -> {
+            if (!v.label.equals(sourceName.label)) {
+                distance.put(v, new Edge(sourceName.label, sourceName.label, Double.POSITIVE_INFINITY));
+            }
+        });
         distance.put(sourceName, new Edge(sourceName.label, sourceName.label, 0.0));
-
+        PriorityQueue<Vertex> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(v -> distance.get(v).getBandwidth()));
         priorityQueue.add(sourceName);
 
         while (!priorityQueue.isEmpty()) {
             Vertex current = priorityQueue.poll();
+
             if (current.equals(targetName)) {
                 break;
             }
@@ -88,33 +85,23 @@ public class FindPath {
             for (Map.Entry<Vertex, Edge> neighborEntry : graph.edgeMap.get(current).entrySet()) {
                 var neighbor = neighborEntry.getKey();
                 double newDistance = distance.get(current).getBandwidth() + neighborEntry.getValue().getBandwidth();
-                if(!distance.containsKey(neighbor)) {
-                    if(graph.edgeMap.get(current).get(neighbor).getBandwidth() >= rq.getBandwidth()
-                            && neighbor.getCpu() >= rq.getCpu()
-                            && neighbor.getMemory() >= rq.getMemory()) {
-                        distance.put(neighbor, new Edge(current.label, neighbor.label, newDistance));
-                        previous.put(neighbor, current);
-                        priorityQueue.add(neighbor);
-                    }
-                }
-                else if (newDistance < distance.get(neighbor).getBandwidth()
-                        && graph.edgeMap.get(current).get(neighbor).getBandwidth() >= rq.getBandwidth()
-                        && neighbor.getCpu() >= rq.getCpu()
-                        && neighbor.getMemory() >= rq.getMemory()) {
+                if (newDistance < distance.get(neighbor).getBandwidth()) {
                     distance.put(neighbor, new Edge(current.label, neighbor.label, newDistance));
                     previous.put(neighbor, current);
                     priorityQueue.add(neighbor);
                 }
             }
+
         }
+
         List<Vertex> path = new ArrayList<>();
         var current = targetName;
         while (previous.containsKey(current)) {
             path.add(current);
             current = previous.get(current);
         }
-        if(!previous.isEmpty()) {
-            if(targetName!=null) {
+        if (!previous.isEmpty()) {
+            if (targetName != null) {
                 path.add(sourceName);
             }
             Collections.reverse(path);
@@ -132,11 +119,11 @@ public class FindPath {
 
         while (!vnf.isEmpty()) {
             var sfc = vnf.poll();
-            var firstPath = nodeToNFV(graph,rq, current, sfc);
+            var firstPath = nodeToNFV(graph, rq, current, sfc);
 
-            if(firstPath.size()>0) {
+            if (firstPath.size() > 0) {
                 current = firstPath.get(firstPath.size() - 1);
-                var rs = yenKLargestBandwidthPaths(graph,rq, Constants.KSubPath, sfc, firstPath);
+                var rs = yenKLargestBandwidthPaths(graph, rq, Constants.KSubPath, sfc, firstPath);
                 for (var pth : rs) {
                     if (pth.size() != 1 && !isFirst) {
                         pth.remove(0);
@@ -158,7 +145,7 @@ public class FindPath {
         }
         if (!noWays) {
             if (current.equals(graph.vertexMap.get(rq.getEnd()))) {
-                if(vnf.isEmpty()) {
+                if (vnf.isEmpty()) {
                     List<Vertex> one = new ArrayList<>();
                     one.add(current);
                     List<List<Vertex>> noOption = new ArrayList<>();
@@ -167,9 +154,9 @@ public class FindPath {
                 }
                 return path;
             } else {
-                var firstPath = dijkstraShortestPath(graph,rq, current, graph.getVertex(rq.getEnd()));
-                if(firstPath.size()>0) {
-                    var rs = yenKLargestBandwidthPaths(graph,rq, Constants.KSubPath, "no", firstPath);
+                var firstPath = dijkstraShortestPath(graph, rq, current, graph.getVertex(rq.getEnd()));
+                if (firstPath.size() > 0) {
+                    var rs = yenKLargestBandwidthPaths(graph, rq, Constants.KSubPath, "no", firstPath);
                     for (var pth : rs) {
                         if (pth.size() != 1 && !noVNF) {
                             pth.remove(0);
@@ -196,7 +183,7 @@ public class FindPath {
         List<List<Vertex>> result = new ArrayList<>();
         PriorityQueue<Path> candidates = new PriorityQueue<>();
         var source = firstPath.get(0);
-        var target = firstPath.get(firstPath.size()-1);
+        var target = firstPath.get(firstPath.size() - 1);
 // Tìm đường đi lớn nhất ban đầu từ nguồn đến đích
         List<Vertex> largestBandwidthPath = firstPath;
 // service.GetKPath vaf = new service.GetKPath();
@@ -215,8 +202,12 @@ public class FindPath {
                 List<Vertex> newPath = dijkstraShortestPath(graph, rq, source, target);
 // Kiểm tra xem đường đi mới có trùng với các đường đi đã có hay không
                 if (!result.contains(newPath)) {
-                    if (newPath.size() != 1 || newPath.get(0).getFunction().contains(sfc)) {
-                        result.add(newPath);
+                    if(newPath.size() > 0) {
+                        if (newPath.size() != 1 || newPath.get(0).getFunction().contains(sfc)) {
+                            result.add(newPath);
+                        } else {
+                            noWay = true;
+                        }
                     } else {
                         noWay = true;
                     }
