@@ -1,5 +1,6 @@
 package service;
 
+import config.Constants;
 import model.NetworkGraph;
 import model.Request;
 import model.Vertex;
@@ -62,7 +63,13 @@ public class GetKPath {
 //                System.out.println();
 //            }
 //            System.out.println("co " + temp.size() + " duong");
-            return new ArrayList<>(temp);
+            var rs = new ArrayList<>(temp);
+            Collections.shuffle(rs);
+            if(rs.size() > Constants.KPath) {
+                return rs.subList(0, Constants.KPath);
+            } else {
+                return rs;
+            }
         } else {
 //            System.out.println("Khong co duong");
         }

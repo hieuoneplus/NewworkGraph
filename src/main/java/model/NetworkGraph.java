@@ -54,8 +54,16 @@ public class NetworkGraph {
     public void addVertex(String label, ArrayList<String> function, Double resource, Double cpu) {
         Vertex v = new Vertex(label, function, resource, cpu);
         vertexMap.put(label, v);
+        edgeMap.put(v, new HashMap<>());
         allCpu += cpu;
         allMemory += resource;
+    }
+    public void addOldVertex(Vertex v) {
+
+        vertexMap.put(v.getLabel(), v);
+        edgeMap.put(v, new HashMap<>());
+        allCpu += v.cpu;
+        allMemory += v.memory;
     }
     public Vertex getVertex(String label) {
         return vertexMap.get(label);
@@ -127,11 +135,13 @@ public class NetworkGraph {
         Vertex v1 = vertexMap.get(label1);
         Vertex v2 = vertexMap.get(label2);
         if (edgeMap.get(v1) != null) {
-            allBandwidth -= edgeMap.get(v1).get(v2).getBandwidth();
-            edgeMap.get(v1).remove(v2);
+            if(edgeMap.get(v1).get(v2) != null) {
+                allBandwidth -= edgeMap.get(v1).get(v2).getBandwidth();
+                edgeMap.get(v1).remove(v2);
 //            if (edgeMap.get(v1).size() == 0) {
 //                edgeMap.remove(v1);
 //            }
+            }
         }
         if (edgeMap.get(v2) != null) {
             edgeMap.get(v2).remove(v1);
@@ -167,6 +177,17 @@ public class NetworkGraph {
         List<Vertex> list = new ArrayList<>();
         list.addAll(vertexMap.values());
         return list;
+    }
+    public boolean hasEdge(String v1, String v2) {
+        if(edgeMap.get(vertexMap.get(v1)) != null) {
+            if(edgeMap.get(vertexMap.get(v1)).get(vertexMap.get(v2)) != null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }
  

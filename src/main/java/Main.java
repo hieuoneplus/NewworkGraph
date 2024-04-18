@@ -1,4 +1,6 @@
 
+import model.NetworkGraph;
+import model.Request;
 import service.*;
 
 import java.util.*;
@@ -72,8 +74,8 @@ public class Main {
 //            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
 //        }));
 
-        var graph = DataTxt.getNetwork("src/main/resources/network/conus_uniform_0_network.txt");
-        var requests = DataTxt.getRequest("src/main/resources/request/conus_uniform_0_30requests.txt");
+        var graph = DataTxt.getNetwork("src/main/resources/network/cogent_rural_1_network.txt");
+        var requests = DataTxt.getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
         requests.sort(Comparator.comparingDouble(request -> {
             double wCpu = 1.0;
             double wMemory = 1.0;
@@ -83,8 +85,10 @@ public class Main {
             return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
         }));
         var cloneGraph = graph.copy();
-
-
+//        FindPath f = new FindPath();
+//
+////        GetKPath.getOnePath(f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("7"), graph.vertexMap.get("6")));
+//        GetKPath.getMorePathV2(f.yenKLargestBandwidthPathsV2(graph, new Request(), 100, "No", f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("1"), graph.vertexMap.get("5"))));
 
         NSGA_II.createFirstInd(graph, requests);
         NSGA_II.createPopulation();
