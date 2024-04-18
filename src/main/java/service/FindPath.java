@@ -123,7 +123,7 @@ public class FindPath {
 
             if (firstPath.size() > 0) {
                 current = firstPath.get(firstPath.size() - 1);
-                var rs = yenKLargestBandwidthPaths(graph, rq, Constants.KSubPath, sfc, firstPath);
+                var rs = yenKLargestBandwidthPathsV2(graph, rq, Constants.KSubPath, sfc, firstPath);
                 for (var pth : rs) {
                     if (pth.size() != 1 && !isFirst) {
                         pth.remove(0);
@@ -156,7 +156,7 @@ public class FindPath {
             } else {
                 var firstPath = dijkstraShortestPath(graph, rq, current, graph.getVertex(rq.getEnd()));
                 if (firstPath.size() > 0) {
-                    var rs = yenKLargestBandwidthPaths(graph, rq, Constants.KSubPath, "no", firstPath);
+                    var rs = yenKLargestBandwidthPathsV2(graph, rq, Constants.KSubPath, "no", firstPath);
                     for (var pth : rs) {
                         if (pth.size() != 1 && !noVNF) {
                             pth.remove(0);
@@ -191,7 +191,7 @@ public class FindPath {
 // Thêm đường đi lớn nhất vào danh sách kết quả
 
         result.add(largestBandwidthPath);
-        for (int i = 1; i < k; i++) {
+        for (; result.size() < k;) {
 // Lặp qua các đỉnh trên đường đi lớn nhất
             for (int j = 0; j < largestBandwidthPath.size() - 1; j++) {
 // Loại bỏ cạnh từ đỉnh cuối cùng của đường đi lớn nhất đến đích
@@ -202,7 +202,7 @@ public class FindPath {
                 List<Vertex> newPath = dijkstraShortestPath(graph, rq, source, target);
 // Kiểm tra xem đường đi mới có trùng với các đường đi đã có hay không
                 if (!result.contains(newPath)) {
-                    if(newPath.size() > 0) {
+                    if (newPath.size() > 0) {
                         if (newPath.size() != 1 || newPath.get(0).getFunction().contains(sfc)) {
                             result.add(newPath);
                         } else {
@@ -216,7 +216,7 @@ public class FindPath {
                 graph.addEdge(largestBandwidthPath.get(j).getLabel(), largestBandwidthPath.get(j + 1).getLabel(), c);
 // Xây dựng ứng viên cho đường đi tiếp theo
                 if (!noWay) {
-                    List<Vertex> subPath = newPath.subList(0, j + 1);
+                    List<Vertex> subPath = largestBandwidthPath.subList(0, j + 1);
                     candidates.add(new Path(subPath, graph));
                 }
             }
@@ -225,6 +225,79 @@ public class FindPath {
             }
 // Chọn đường đi mới là đường đi lớn nhất trong ứng viên
             largestBandwidthPath = candidates.poll().getPath();
+        }
+        return result;
+    }
+
+    public List<List<Vertex>> yenKLargestBandwidthPathsV2(NetworkGraph graph, Request rq, int k, String sfc, List<Vertex> firstPath) {
+        List<List<Vertex>> result = new ArrayList<>();
+        PriorityQueue<Path> candidates = new PriorityQueue<>();
+        var target = firstPath.get(firstPath.size() - 1);
+
+        List<Vertex> largestBandwidthPath = firstPath;
+
+        result.add(largestBandwidthPath);
+        for (; result.size() < k;) {
+            for (int j = 0; j < largestBandwidthPath.size() - 1; j++) {
+                List<Edge> removeEdge = new ArrayList<>();
+                List<Vertex> removeVertex = new ArrayList<>();
+
+                var rootPath = largestBandwidthPath.subList(0, j + 1);
+                var spurNode = largestBandwidthPath.get(j);
+
+                int finalJ = j;
+                result.parallelStream().forEachOrdered(p -> {
+                    if(p.size() >= finalJ +1) {
+                        if (new HashSet<>(p.subList(0, finalJ + 1)).containsAll(rootPath)) {
+                            if (graph.hasEdge(p.get(finalJ).getLabel(), p.get(finalJ + 1).getLabel())) {
+                                removeEdge.add(graph.edgeMap.get(graph.vertexMap.get(p.get(finalJ).getLabel())).get(graph.vertexMap.get(p.get(finalJ + 1).getLabel())));
+                                graph.removeEdge(p.get(finalJ).getLabel(), p.get(finalJ + 1).getLabel());
+                            }
+                        }
+                    }
+                });
+                rootPath.parallelStream().forEachOrdered(rootPathNode ->{
+//                for (var rootPathNode : rootPath) {
+                    if (!rootPathNode.equals(spurNode)) {
+                        removeVertex.add(graph.vertexMap.get(rootPathNode.getLabel()));
+                        removeEdge.addAll(graph.edgeMap.get(graph.vertexMap.get(rootPathNode.getLabel())).values());
+                        graph.removeVertex(rootPathNode.getLabel());
+                    }
+//                }
+                });
+                boolean noWay = false;
+                var spurPath = dijkstraShortestPath(graph, rq, graph.vertexMap.get(spurNode.getLabel()), graph.vertexMap.get(target.getLabel()));
+
+                List<Vertex> totalPath = new ArrayList<>(rootPath);
+                if (spurPath.size() > 0) {
+                    if (spurPath.size() != 1 || spurPath.get(0).getFunction().contains(sfc)) {
+                        totalPath.addAll(spurPath.subList(1, spurPath.size()));;
+                    } else {
+                        noWay = true;
+                    }
+                } else {
+                    noWay = true;
+                }
+
+                removeVertex.parallelStream().forEachOrdered(graph::addOldVertex);
+                removeEdge.parallelStream().forEachOrdered(e -> {
+                    graph.addEdge(e.v1, e.v2, e.bandwidth);
+                });
+                if(!noWay) {
+                    if (!result.contains(totalPath)) {
+                        candidates.add(new Path(totalPath, graph));
+                    }
+                }
+
+            }
+            if(candidates.isEmpty()) {
+                break;
+            }
+            largestBandwidthPath = candidates.poll().getPath();
+            if(!result.contains(largestBandwidthPath)) {
+                result.add(largestBandwidthPath);
+            }
+
         }
         return result;
     }
@@ -250,14 +323,22 @@ public class FindPath {
 
         // Hàm tính toán băng thông lớn nhất trên đường đi
         private double findMaxBandwidth(List<Vertex> path) {
-            double maxBandwidth = Double.POSITIVE_INFINITY;
+            double sum = 0;
             for (int i = 0; i < path.size() - 1; i++) {
-                Edge edge = graph.edgeMap.get(path.get(i)).get(path.get(i + 1));
-                if (edge != null && edge.getBandwidth() < maxBandwidth) {
-                    maxBandwidth = edge.getBandwidth();
+                Edge edge = graph.edgeMap.get(graph.vertexMap.get(path.get(i).getLabel())).get(graph.vertexMap.get(path.get(i + 1).getLabel()));
+                if (edge != null) {
+                    sum += edge.getBandwidth();
                 }
             }
-            return maxBandwidth;
+            return sum;
+//            double maxBandwidth = Double.POSITIVE_INFINITY;
+//            for (int i = 0; i < path.size() - 1; i++) {
+//                Edge edge = graph.edgeMap.get(path.get(i)).get(path.get(i + 1));
+//                if (edge != null && edge.getBandwidth() < maxBandwidth) {
+//                    maxBandwidth = edge.getBandwidth();
+//                }
+//            }
+//            return maxBandwidth;
         }
     }
 }
