@@ -191,7 +191,7 @@ public class FindPath {
 // Thêm đường đi lớn nhất vào danh sách kết quả
 
         result.add(largestBandwidthPath);
-        for (int i=0; i <= k;i++) {
+        for (int i = 1; i <= k; i++) {
 // Lặp qua các đỉnh trên đường đi lớn nhất
             for (int j = 0; j < largestBandwidthPath.size() - 1; j++) {
 // Loại bỏ cạnh từ đỉnh cuối cùng của đường đi lớn nhất đến đích
