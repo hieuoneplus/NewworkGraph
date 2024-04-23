@@ -121,10 +121,12 @@ public class NetworkGraph {
         var c = edgeMap.get(v);
         if (c != null) {
             ArrayList<Vertex> list = new ArrayList<>(c.keySet());
-            for (Vertex pt : list) {
+            list.parallelStream().forEachOrdered(pt->{
+//            for (Vertex pt : list) {
                 allBandwidth -= edgeMap.get(pt).get(v).getBandwidth();
                 edgeMap.get(pt).remove(v);
-            }
+//            }
+            });
         }
         edgeMap.remove(v);
         allMemory -= v.getMemory();

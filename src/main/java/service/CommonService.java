@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class CommonService {
+
+
     public static void draw(List<Individual> list, List<Double> Lb, List<Double> ratio, int rank) {
         for(int i=0; i<list.size();i++) {
             if(list.get(i).rank == rank) {
@@ -31,7 +33,7 @@ public class CommonService {
         ind.parallelStream().forEachOrdered(pt -> {
             if(pt.getRank() == 0) {
 //                if(pt.Lb == 1.0) {
-                    System.out.print(pt.getOption().values() + " ");
+//                    System.out.print(pt.getOption().values() + " ");
 //                }
                 System.out.print(Math.round(pt.getFx()*10000.0)/10000.0 + " ");
 

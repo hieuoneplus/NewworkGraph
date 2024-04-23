@@ -12,7 +12,7 @@ import java.io.*;
 import java.util.*;
 
 public class NSGA_II {
-
+    public static int countNN = 0;
     public static Random ran = new Random();
 
     public static List<Request> groupRq;
@@ -92,6 +92,7 @@ public class NSGA_II {
     public static void evaluate(NetworkGraph cloneGraph) {
 
         ind.parallelStream().forEach(duyet -> {
+            Map<Request, Boolean> isAccepted = new HashMap<>();
 //            for(var duyet : ind) {
                 double count = 0.0;
                 NetworkGraph temp = cloneGraph.copy();
@@ -102,10 +103,15 @@ public class NSGA_II {
                         var size = allPath.get(rq).size();
                         if(index < size) {
                             if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index))) {
+                                isAccepted.put(rq, true);
                                 count++;
                             } else {
+                                isAccepted.put(rq, false);
                                 temp = temp1; // Gán lại giá trị cho mảng tempGraph
                             }
+                        } else {
+                            countNN++;
+                            isAccepted.put(rq, false);
                         }
                     }
 
@@ -114,7 +120,8 @@ public class NSGA_II {
                 var ratioAccepted = count / ((double) allRequest);
                 duyet.setLb(Lb);
                 duyet.setRatioAccepted(ratioAccepted);
-                duyet.setFx((Constants.alpha * Lb) + (Constants.alpha * ratioAccepted));
+                duyet.setFx((Constants.alpha * Lb) + ((1 - Constants.alpha) * ratioAccepted));
+                duyet.setAccepted(isAccepted);
 //            }
         });
     }
@@ -145,11 +152,12 @@ public class NSGA_II {
         ind.addAll(temp);
 
         CommonService.Print(ind);
+
     }
 
 
     //chon loc ca the
-    public static void filter() {
+    public static void filter(boolean ok) {
             int rank = 0;
             int sum = 0;
             int slotLast = 0;
@@ -179,7 +187,12 @@ public class NSGA_II {
                 pt.setCrowdingDistance(0.0);
             });
         ind.clear();
-
+        if(ok) {
+            setViewAfterFilter();
+            for(int i=0; i< newPopulation.size();i++) {
+                Utils.outJson(newPopulation.get(i), String.valueOf(i));
+            }
+        }
     }
 
     // lai ghep
@@ -307,6 +320,28 @@ public class NSGA_II {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public static void setViewAfterFilter() {
+        newPopulation.parallelStream().forEachOrdered(individual -> {
+            Map<Request, String> view = new HashMap<>();
+            individual.getOption().keySet().parallelStream().forEachOrdered(key -> {
+                var index = individual.getOption().get(key);
+                var size = allPath.get(key).size();
+                if(index < size) {
+                    var path = allPath.get(key).get(index);
+                    if (path != null) {
+                        if(individual.getAccepted().get(key)) {
+                            ArrayList<String> ad = new ArrayList<>();
+                            for (int each = 0; each < path.size(); each++) {
+                                ad.add(path.get(each).label);
+                            }
+                            view.put(key, ad.toString());
+                        }
+                    }
+                }
+            });
+            individual.setView(view);
+        });
     }
 }
 
