@@ -1,10 +1,7 @@
 package service;
 
 import config.Constants;
-import model.Individual;
-import model.NetworkGraph;
-import model.Request;
-import model.Vertex;
+import model.*;
 import org.knowm.xchart.*;
 import service.CommonService;
 
@@ -12,7 +9,6 @@ import java.io.*;
 import java.util.*;
 
 public class NSGA_II {
-    public static int countNN = 0;
     public static Random ran = new Random();
 
     public static List<Request> groupRq;
@@ -110,18 +106,35 @@ public class NSGA_II {
                                 temp = temp1; // Gán lại giá trị cho mảng tempGraph
                             }
                         } else {
-                            countNN++;
                             isAccepted.put(rq, false);
                         }
                     }
 
                 }
-                var Lb = (temp.allMemory / cloneGraph.allMemory + temp.allCpu / cloneGraph.allCpu + temp.allBandwidth / cloneGraph.allBandwidth) / 3.0;
+
+                Optional<Vertex> vc = temp.vertexMap.values()
+                    .parallelStream()
+                    .filter(vertex -> vertex.isServer)
+                    .max(Comparator.comparingDouble(Vertex::getUseCpu));
+
+                var rs2 = temp.getVertex(vc.get().label).useCpu / cloneGraph.getVertex(vc.get().label).cpu;
+
+                Optional<Vertex> vm = temp.vertexMap.values()
+                    .parallelStream()
+                    .filter(vertex -> !vertex.isServer)
+                    .max(Comparator.comparingDouble(Vertex::getUseMem));
+                var rs3 = temp.getVertex(vm.get().label).useMem / cloneGraph.getVertex(vm.get().label).memory;
+
+                Optional<Edge> e = temp.list
+                        .parallelStream()
+                        .max(Comparator.comparingDouble(Edge::getUseBand));
+                var rs1 = e.get().getUseBand() / cloneGraph.edgeMap.get(cloneGraph.getVertex(e.get().v1)).get(cloneGraph.getVertex(e.get().v2)).getBandwidth();
+                var Lb = 1.0 - ((rs1+rs2+rs3)/3.0);
                 var ratioAccepted = count / ((double) allRequest);
-                duyet.setLb(Lb);
-                duyet.setRatioAccepted(ratioAccepted);
-                duyet.setFx((Constants.alpha * Lb) + ((1 - Constants.alpha) * ratioAccepted));
-                duyet.setAccepted(isAccepted);
+                    duyet.setLb(Lb);
+                    duyet.setRatioAccepted(ratioAccepted);
+                    duyet.setFx((Constants.alpha * Lb) + ((1 - Constants.alpha) * ratioAccepted));
+                    duyet.setAccepted(isAccepted);
 //            }
         });
     }

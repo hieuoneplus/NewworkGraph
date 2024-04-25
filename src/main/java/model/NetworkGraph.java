@@ -8,12 +8,14 @@ public class NetworkGraph {
     public final Map<Vertex, Map<Vertex, Edge>> edgeMap;
     public final Map<String, Vertex> vertexMap;
 
+    public List<Edge> list;
     public Double allCpu;
     public Double allMemory;
     public Double allBandwidth;
     public NetworkGraph() {
         vertexMap = new HashMap<>();
         edgeMap = new HashMap<>();
+        list = new ArrayList<>();
         allCpu = 0.0;
         allBandwidth = 0.0;
         allMemory = 0.0;
@@ -36,10 +38,9 @@ public class NetworkGraph {
             Map<Vertex, Edge> newInnerMap = new HashMap<>();
             for (Map.Entry<Vertex, Edge> innerEntry : innerMap.entrySet()) {
                 Vertex innerKey = newGraph.vertexMap.get(innerEntry.getKey().getLabel());
-                Edge innerValue = innerEntry.getValue().copy();//new Edge();
-//                innerValue.setBandwidth(innerEntry.getValue().getBandwidth());
-//                innerValue.setV1(innerEntry.getValue().getV1());
-//                innerValue.setV2(innerEntry.getValue().getV2());
+                Edge real = innerEntry.getValue();
+                newGraph.addEdge(real.v1, real.v2, real.bandwidth);
+                var innerValue = newGraph.edgeMap.get(key).get(innerKey);
                 newInnerMap.put(innerKey, innerValue);
             }
             newGraph.edgeMap.put(key, newInnerMap);
@@ -88,6 +89,9 @@ public class NetworkGraph {
                 edgeMap.get(v2).put(v1, edge);
             }
             edgeMap.put(v1, canh1);
+            if(!list.contains(edge)) {
+                list.add(edge);
+            }
             addSuccess = true;
         } else if (!edgeMap.get(v1).containsKey(v2)) {
             var edge = new Edge(v1.label, v2.label, bandwidth);
@@ -96,6 +100,9 @@ public class NetworkGraph {
                 edgeMap.put(v2, new HashMap<>());
             }
             edgeMap.get(v2).put(v1, edge);
+            if(!list.contains(edge)) {
+                list.add(edge);
+            }
             addSuccess = true;
         } else {
 //            System.out.println("Cạnh đã tồn tại.");

@@ -59,7 +59,7 @@ public class DataTxt {
 
                     // Tạo ArrayList từ mảng phần tử đã tách
                     vnf = new ArrayList<>(Arrays.asList(elementsArray));
-                    graph.addVertex(label,vnf,Double.parseDouble(cpu), Double.parseDouble(cpu));
+                    graph.addVertex(label,vnf,0.0, Double.parseDouble(cpu));
                 } else {
                     graph.addVertex(label, vnf, Double.parseDouble(cpu), 0.0);
                 }

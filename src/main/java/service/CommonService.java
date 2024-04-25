@@ -152,21 +152,23 @@ public class CommonService {
 
         var firstVertex = cloneGraph.getVertex(pathResolve.poll().getLabel());
         if(firstVertex.getFunction().contains(vnf.peek())) {
-            if(firstVertex.getCpu() >= rq.getCpu() && firstVertex.getMemory() >= rq.getMemory()) {
+            if(firstVertex.getCpu() >= rq.getCpu()) {
                 firstVertex.setCpu(firstVertex.getCpu() - rq.getCpu());
+                firstVertex.useCpu += rq.getCpu();
                 cloneGraph.allCpu -= rq.getCpu();
-                firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
-                cloneGraph.allMemory -= rq.getMemory();
                 vnf.poll();
             } else {
                 return false;
             }
         } else {
-            if(firstVertex.getMemory() >= rq.getMemory()) {
-                firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
-                cloneGraph.allMemory -= rq.getMemory();
-            } else {
-                return false;
+            if(!firstVertex.isServer) {
+                if (firstVertex.getMemory() >= rq.getMemory()) {
+                    firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
+                    firstVertex.useMem += rq.getMemory();
+                    cloneGraph.allMemory -= rq.getMemory();
+                } else {
+                    return false;
+                }
             }
         }
         vertexConnect.push(firstVertex);
@@ -176,21 +178,23 @@ public class CommonService {
 
 
             if(vertex.getFunction().contains(vnf.peek())) {
-                if(vertex.getCpu() >= rq.getCpu() && vertex.getMemory() >= rq.getMemory()) {
+                if(vertex.getCpu() >= rq.getCpu()) {
                     vertex.setCpu(vertex.getCpu() - rq.getCpu());
+                    vertex.useCpu += rq.getCpu();
                     cloneGraph.allCpu -= rq.getCpu();
-                    vertex.setMemory(vertex.getMemory() - rq.getMemory());
-                    cloneGraph.allMemory -= rq.getMemory();
                     vnf.poll();
                 } else {
                     return false;
                 }
             } else {
-                if(vertex.getMemory() >= rq.getMemory()) {
-                    vertex.setMemory(vertex.getMemory() - rq.getMemory());
-                    cloneGraph.allMemory -= rq.getMemory();
-                } else {
-                    return false;
+                if(!vertex.isServer) {
+                    if (vertex.getMemory() >= rq.getMemory()) {
+                        vertex.setMemory(vertex.getMemory() - rq.getMemory());
+                        vertex.useMem += rq.getMemory();
+                        cloneGraph.allMemory -= rq.getMemory();
+                    } else {
+                        return false;
+                    }
                 }
             }
             if(vertexConnect.size()>0) {
@@ -203,6 +207,7 @@ public class CommonService {
                             if (edge.getBandwidth() >= rq.getBandwidth()) {
                                 edge.setBandwidth(edge.getBandwidth() - rq.getBandwidth());
                                 listEdge.add(edge);
+                                edge.useBand += rq.getBandwidth();
                                 cloneGraph.allBandwidth -= rq.getBandwidth();
                             }
                         } catch (NullPointerException e) {

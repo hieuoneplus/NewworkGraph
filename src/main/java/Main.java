@@ -74,8 +74,8 @@ public class Main {
 //            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
 //        }));
 
-        var graph = DataTxt.getNetwork("src/main/resources/network/cogent_rural_1_network.txt");
-        var requests = DataTxt.getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
+        var graph = DataTxt.getNetwork("src/main/resources/network/cogent_urban_1_network.txt");
+        var requests = DataTxt.getRequest("src/main/resources/request/cogent_urban_1_20requests.txt");
         requests.sort(Comparator.comparingDouble(request -> {
             double wCpu = 1.0;
             double wMemory = 1.0;
@@ -86,9 +86,9 @@ public class Main {
         }));
         var cloneGraph = graph.copy();
 //        FindPath f = new FindPath();
-
+//
 //        GetKPath.getOnePath(f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("7"), graph.vertexMap.get("6")));
-        //GetKPath.getMorePathV2(f.yenKLargestBandwidthPathsV2(graph, new Request(), 12, "f2", f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("8"), graph.vertexMap.get("10"))));
+//        GetKPath.getMorePathV2(f.yenKLargestBandwidthPathsV2(graph, new Request(), 12, "f2", f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("8"), graph.vertexMap.get("10"))));
 //        Queue<String> q = new LinkedList<>();
 //        q.add("f1");
 //        q.add("f2");
@@ -99,7 +99,7 @@ public class Main {
         NSGA_II.createFirstInd(graph, requests);
         NSGA_II.createPopulation();
         NSGA_II.printPathToFile("src/main/resources/path.txt");
-        for(int i=0;i<1000;i++) {
+        for(int i=0;i<100;i++) {
             NSGA_II.evaluate(cloneGraph);
             NSGA_II.divRankV2();
             NSGA_II.filter(false);
@@ -110,7 +110,6 @@ public class Main {
         NSGA_II.divRankV2();
         NSGA_II.drawImg();
         NSGA_II.filter(true);
-        System.out.println(NSGA_II.countNN);
     }
 }
  
