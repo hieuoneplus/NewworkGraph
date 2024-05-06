@@ -18,8 +18,8 @@ public class HV {
     public static String pathGA = "src/main/java/data/output/GA/";
     public static String pathNSGA_II = "src/main/java/data/output/NSGA-II/";
 
-    public static String pathTest = "cogent_rural_0_30requests";
-    public static double[] point = {1.0,1.0};
+    public static String pathTest = "nsf_urban_4_30requests";
+    public static double[] point = {0.0,0.0};
 
     public static void main(String[] args) {
         var gas = getGA();
@@ -116,17 +116,15 @@ public class HV {
         double hypervolume = 0.0;
         double prevFb = referencePoint[1];
         for (int i=0;i<individuals.size();i++) {
-            double lb = individuals.get(i).getLb();
-            double fb = individuals.get(i).getRatioAccepted();
             var ind = individuals.get(i);
             if(i != individuals.size()-1) {
                 var indLbPre = individuals.get(i+1);
-                double leng = indLbPre.getLb() - ind.getLb();
-                double width = prevFb - ind.getRatioAccepted();
+                double leng = Math.abs(indLbPre.getLb() - ind.getLb());
+                double width = Math.abs(prevFb - ind.getRatioAccepted());
                 hypervolume += leng*width;
             } else {
-                double leng = prevFb - ind.getLb();
-                double width = prevFb - ind.getRatioAccepted();
+                double leng = Math.abs(prevFb - ind.getLb());
+                double width = Math.abs(prevFb - ind.getRatioAccepted());
                 hypervolume += leng*width;
             }
         }

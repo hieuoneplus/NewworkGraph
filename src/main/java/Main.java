@@ -76,6 +76,8 @@ public class Main {
 
 
         var input = DataTxt.getInput();
+
+        CommonService.createDic(Constants.pathOutput,"");
         input.entrySet().parallelStream().forEach(entry -> {
             try {
                 String nameDic = entry.getValue().substring(0, entry.getValue().indexOf(".txt"));
