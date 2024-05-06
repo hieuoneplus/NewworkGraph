@@ -21,9 +21,9 @@ public class FindPath {
                 distance.put(v, new Edge(sourceName.label, sourceName.label, Double.POSITIVE_INFINITY));
             }
         });
-        distance.put(sourceName, new Edge(sourceName.label, sourceName.label, 0.0));
+        distance.put(graph.vertexMap.get(sourceName.label), new Edge(sourceName.label, sourceName.label, 0.0));
         PriorityQueue<Vertex> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(v -> distance.get(v).getBandwidth()));
-        priorityQueue.add(sourceName);
+        priorityQueue.add(graph.vertexMap.get(sourceName.label));
 
         while (!priorityQueue.isEmpty()) {
             Vertex current = priorityQueue.poll();
@@ -50,7 +50,7 @@ public class FindPath {
                 current = previous.get(current);
             }
             if (targetName != null) {
-                if(path.contains(targetName)) {
+                if (path.contains(targetName)) {
                     path.add(sourceName);
                 }
             }
@@ -73,14 +73,14 @@ public class FindPath {
                 distance.put(v, new Edge(sourceName.label, sourceName.label, Double.POSITIVE_INFINITY));
             }
         });
-        distance.put(sourceName, new Edge(sourceName.label, sourceName.label, 0.0));
+        distance.put(graph.vertexMap.get(sourceName.label), new Edge(sourceName.label, sourceName.label, 0.0));
         PriorityQueue<Vertex> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(v -> distance.get(v).getBandwidth()));
-        priorityQueue.add(sourceName);
+        priorityQueue.add(graph.vertexMap.get(sourceName.label));
 
         while (!priorityQueue.isEmpty()) {
             Vertex current = priorityQueue.poll();
 
-            if (current.equals(targetName)) {
+            if (current.equals(graph.vertexMap.get(targetName.label))) {
                 break;
             }
 
@@ -250,7 +250,7 @@ public class FindPath {
 
                 int finalJ = j;
                 result.parallelStream().forEachOrdered(p -> {
-                    if(p.size() > finalJ +1) {
+                    if (p.size() > finalJ + 1) {
                         if (new HashSet<>(p.subList(0, finalJ + 1)).containsAll(rootPath)) {
                             if (graph.hasEdge(p.get(finalJ).getLabel(), p.get(finalJ + 1).getLabel())) {
                                 removeEdge.add(graph.edgeMap.get(graph.vertexMap.get(p.get(finalJ).getLabel())).get(graph.vertexMap.get(p.get(finalJ + 1).getLabel())));
@@ -259,7 +259,7 @@ public class FindPath {
                         }
                     }
                 });
-                rootPath.parallelStream().forEachOrdered(rootPathNode ->{
+                rootPath.parallelStream().forEachOrdered(rootPathNode -> {
 //                for (var rootPathNode : rootPath) {
                     if (!rootPathNode.equals(spurNode)) {
                         removeVertex.add(graph.vertexMap.get(rootPathNode.getLabel()));
@@ -274,7 +274,7 @@ public class FindPath {
                 List<Vertex> totalPath = new ArrayList<>(rootPath);
                 if (spurPath.size() > 0) {
                     if (spurPath.size() != 1 || spurPath.get(0).getFunction().contains(sfc)) {
-                        totalPath.addAll(spurPath.subList(1, spurPath.size()));;
+                        totalPath.addAll(spurPath.subList(1, spurPath.size()));
                     } else {
                         noWay = true;
                     }
@@ -286,18 +286,18 @@ public class FindPath {
                 removeEdge.parallelStream().forEachOrdered(e -> {
                     graph.addEdge(e.v1, e.v2, e.bandwidth);
                 });
-                if(!noWay) {
+                if (!noWay) {
                     if (!result.contains(totalPath)) {
                         candidates.add(new Path(totalPath, graph));
                     }
                 }
 
             }
-            if(candidates.isEmpty()) {
+            if (candidates.isEmpty()) {
                 break;
             }
             largestBandwidthPath = candidates.poll().getPath();
-            if(!result.contains(largestBandwidthPath)) {
+            if (!result.contains(largestBandwidthPath)) {
                 result.add(largestBandwidthPath);
             }
 

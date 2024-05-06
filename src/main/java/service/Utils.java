@@ -1,10 +1,14 @@
 package service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import config.Constants;
 import model.RequestMapSerializer;
+import serviceexperimantal.model.GenGA;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -20,7 +24,7 @@ public class Utils {
         }
         return null;
     }
-    public static void outJson(Object o, String i) {
+    public static void outJson(Object o,String dic, String i) {
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -29,7 +33,7 @@ public class Utils {
         module.addSerializer(new RequestMapSerializer());
         mapper.registerModule(module);
 
-        String filePath = "src/main/java/data/output/NSGA-II/output_" + i + ".json";
+        String filePath = Constants.pathOutput + dic + "/" + i + ".json";
 
         // Thử ghi chuỗi JSON vào tệp
         try (FileWriter fileWriter = new FileWriter(filePath)) {
@@ -37,6 +41,15 @@ public class Utils {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    public static <T> T jsonToObject(String path, Class<T> valueType) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(new File(path), valueType);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

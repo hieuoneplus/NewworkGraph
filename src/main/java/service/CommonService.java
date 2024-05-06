@@ -1,7 +1,9 @@
 package service;
 
 import model.*;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -53,17 +55,20 @@ public class CommonService {
 
         list.sort(Comparator.comparingDouble(Individual::getLb));
 
-        list.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
-        list.get(list.size() - 1).setCrowdingDistance(Double.POSITIVE_INFINITY);
-
+        List<Individual> bien = list.parallelStream()
+                .filter(individual -> individual.getLb() == list.get(list.size() - 1).getLb() || individual.getLb() == list.get(0).getLb())
+                .map(individual -> {
+                    individual.setCrowdingDistance(Double.POSITIVE_INFINITY);
+                    return individual;
+                })
+                .toList();
 
         var LbRange = list.get(list.size()-1).getLb() - list.get(0).getLb();
         var AcceptedRange = list.get(0).getRatioAccepted() - list.get(list.size()-1).getRatioAccepted();
 
         var cloneList = new ArrayList<>(list);
         cloneList.sort(Comparator.comparingDouble(Individual::getLb));
-        cloneList.remove(cloneList.get(0));
-        cloneList.remove(cloneList.get(cloneList.size()-1));
+        cloneList.removeAll(bien);
         if(!cloneList.isEmpty()) {
             cloneList.parallelStream().forEachOrdered(pt -> {
                 pt.crowdingDistance += ((list.get(list.indexOf(pt) + 1).Lb - list.get(list.indexOf(pt) - 1).Lb) / LbRange) + ((list.get(list.indexOf(pt) - 1).ratioAccepted - list.get(list.indexOf(pt) + 1).ratioAccepted) / AcceptedRange);
@@ -127,7 +132,7 @@ public class CommonService {
         var rs = list.parallelStream()
                 .filter(pt -> list.stream().noneMatch(other -> dominates(other, pt)))
                 .collect(Collectors.toList());
-        rs.parallelStream().forEachOrdered(pt -> {
+        rs.parallelStream().forEach(pt -> {
             pt.setRank(rank);
         });
         return rs;
@@ -241,5 +246,17 @@ public class CommonService {
             System.out.println("node " + c.getKey().label + " " + hieu);
 
         }
+    }
+    public static void createDic(String path, String dic) {
+        File directory = new File(path.concat(dic));
+        if (directory.exists()) {
+            try {
+                FileUtils.deleteDirectory(directory);
+            } catch (Exception e) {
+
+            }
+        }
+        directory.mkdir();
+
     }
 }

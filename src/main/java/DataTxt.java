@@ -1,3 +1,4 @@
+import config.Constants;
 import model.NetworkGraph;
 import model.Request;
 
@@ -10,7 +11,43 @@ public class DataTxt {
 //        getNetwork("src/main/resources/network/cogent_centers_4_network.txt");
 //        getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
 //    }
+
+    public static String getRequestPath(String networkName, String numRequest) {
+
+        String cutString = networkName.substring(0, networkName.indexOf("network"));
+
+        // Chuỗi cần nối
+        String appendString = numRequest.concat("requests.txt");
+
+        // Nối chuỗi đã cắt với chuỗi mới
+        return cutString + appendString;
+    }
+    public static Map<String, String> getInput() {
+        Map<String,String> rs = new HashMap<>();
+        String directoryPath = Constants.pathInput;
+
+        File directory = new File(directoryPath);
+
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile() && file.getName().endsWith("network.txt")) {
+                        rs.put(file.getName(),getRequestPath(file.getName(),"30"));
+                    }
+                }
+            }
+        } else {
+            System.out.println("Đường dẫn không phải là một thư mục.");
+        }
+        return rs;
+    }
+
+
     public static List<Request> getRequest(String path) {
+        String directoryPath = Constants.pathInput;
+        path = directoryPath.concat(path);
         List<Request> rqs = new ArrayList<>();
         File file = new File(path);
         try {
@@ -38,6 +75,8 @@ public class DataTxt {
         }
     }
     public static NetworkGraph getNetwork(String path) {
+        String directoryPath = Constants.pathInput;
+        path = directoryPath.concat(path);
         NetworkGraph graph = new NetworkGraph();
         File file = new File(path);
         try {
