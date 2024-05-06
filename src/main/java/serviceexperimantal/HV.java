@@ -11,16 +11,14 @@ import serviceexperimantal.model.GenNSGA;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HV {
     public static String pathGA = "src/main/java/data/output/GA/";
     public static String pathNSGA_II = "src/main/java/data/output/NSGA-II/";
 
+    public static String pathTest = "cogent_rural_0_30requests";
     public static double[] point = {1.0,1.0};
 
     public static void main(String[] args) {
@@ -63,11 +61,12 @@ public class HV {
 
         var s1 = calculateHypervolume(rsGA, point);
         var s2 = calculateHypervolume(rsNSGA, point);
-        System.out.println();
+        System.out.println("GA : " + s1 + "\n" + "NSGA-II : " + s2);
+
     }
     public static List<Individual> getGA() {
         List<Individual> list = new ArrayList<>();
-        File dic = new File(pathGA + "cogent_centers_1_30requests");
+        File dic = new File(pathGA + pathTest);
         if(dic.isDirectory()) {
             File[] files = dic.listFiles();
             if(files != null) {
@@ -84,7 +83,7 @@ public class HV {
     }
     public static List<Individual> getNSGA() {
         List<Individual> list = new ArrayList<>();
-        File dic = new File(pathNSGA_II + "cogent_centers_1_30requests");
+        File dic = new File(pathNSGA_II + pathTest);
         if(dic.isDirectory()) {
             File[] files = dic.listFiles();
             if(files != null) {
@@ -113,20 +112,23 @@ public class HV {
         ind.addAll(temp);
     }
     public static double calculateHypervolume(List<Individual> individuals, double[] referencePoint) {
-        individuals.sort((a, b) -> Double.compare(a.getLb(), b.getLb())); // Sắp xếp theo giá trị Lb
+        individuals.sort(Comparator.comparingDouble(Individual::getLb)); // Sắp xếp theo giá trị Lb
         double hypervolume = 0.0;
         double prevFb = referencePoint[1];
-        for (Individual individual : individuals) {
-            double lb = individual.getLb();
-            double fb = individual.getRatioAccepted();
-            if (fb < referencePoint[1]) {
-                if (lb < referencePoint[0]) {
-                    hypervolume += (referencePoint[1] - fb) * (referencePoint[0] - lb);
-                } else {
-                    hypervolume += (referencePoint[1] - fb) * (prevFb - referencePoint[0]);
-                }
+        for (int i=0;i<individuals.size();i++) {
+            double lb = individuals.get(i).getLb();
+            double fb = individuals.get(i).getRatioAccepted();
+            var ind = individuals.get(i);
+            if(i != individuals.size()-1) {
+                var indLbPre = individuals.get(i+1);
+                double leng = indLbPre.getLb() - ind.getLb();
+                double width = prevFb - ind.getRatioAccepted();
+                hypervolume += leng*width;
+            } else {
+                double leng = prevFb - ind.getLb();
+                double width = prevFb - ind.getRatioAccepted();
+                hypervolume += leng*width;
             }
-            prevFb = fb;
         }
         return hypervolume;
     }
