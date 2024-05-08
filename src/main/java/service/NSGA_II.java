@@ -191,38 +191,38 @@ public class NSGA_II {
         if (slotLast != 0) {
             newPopulation.addAll(CommonService.findCroundingDistance(last, slotLast));
         }
-
+        ind = new ArrayList<>(newPopulation);
+        newPopulation.clear();
+        ind.parallelStream().forEach(pt -> {
+            pt.setRank(0);
+            pt.setCrowdingDistance(0.0);
+        });
     }
 
     // lai ghep
     public void hybrid() {
         //reset evalute
-        newPopulation.parallelStream().forEach(pt -> {
-            pt.setRank(0);
-            pt.setCrowdingDistance(0.0);
-        });
-        ind.clear();
+//        newPopulation.parallelStream().forEach(pt -> {
+//            pt.setRank(0);
+//            pt.setCrowdingDistance(0.0);
+//        });
 
-        tapnghiem.clear();
-        newPopulation.parallelStream().forEachOrdered(individual -> {
-            tapnghiem.add(individual.getOption());
-        });
-        newPopulation.parallelStream().forEachOrdered(pt -> {
+        ind.parallelStream().forEachOrdered(pt -> {
             Random rnn = new Random();
             if (rnn.nextInt(100) < Constants.ratioHyrid) {
                 int out = 0;
-                int cha = newPopulation.indexOf(pt);
+                int cha = ind.indexOf(pt);
                 int me;
                 do {
-                    me = rnn.nextInt(newPopulation.size());
+                    me = rnn.nextInt(ind.size());
                     out++;
                     if (out == Constants.outLoop) {
                         break;
                     }
                 } while (me == cha);
 
-                var dad = newPopulation.get(cha);
-                var mom = newPopulation.get(me);
+                var dad = ind.get(cha);
+                var mom = ind.get(me);
 
 
                 Individual in1 = new Individual();
@@ -243,16 +243,16 @@ public class NSGA_II {
                 if (!tapnghiem.contains(map1)) {
                     tapnghiem.add(map1);
                     in1.setOption(map1);
-                    ind.add(in1);
+                    newPopulation.add(in1);
                 }
                 if (!tapnghiem.contains(map2)) {
                     tapnghiem.add(map2);
                     in2.setOption(map2);
-                    ind.add(in2);
+                    newPopulation.add(in2);
                 }
             }
         });
-        copyGen = new ArrayList<>(ind);
+        copyGen = new ArrayList<>(newPopulation);
 
     }
 
@@ -275,7 +275,7 @@ public class NSGA_II {
 
                 if (!tapnghiem.contains(evol.getOption())) {
                     tapnghiem.add(evol.getOption());
-                    ind.add(evol);
+                    newPopulation.add(evol);
                 }
             }
 
@@ -332,7 +332,7 @@ public class NSGA_II {
     }
 
     public void setViewAfterFilter() {
-        newPopulation.parallelStream().forEachOrdered(individual -> {
+        ind.parallelStream().forEachOrdered(individual -> {
             Map<Request, String> view = new HashMap<>();
             individual.getOption().keySet().parallelStream().forEach(key -> {
                 var index = individual.getOption().get(key);
@@ -355,10 +355,23 @@ public class NSGA_II {
     }
     public void getIndRankZeroAfterFilter(String type) {
         setViewAfterFilter();
+        Set<String> uniqueFbLbPairs = new HashSet<>();
+        List<Individual> distinct = ind.stream()
+                .filter(individual -> {
+                    String fbLbPair = individual.getLb() + "-" + individual.getRatioAccepted();
+                    if (uniqueFbLbPairs.contains(fbLbPair)) {
+                        return false; // Nếu cặp Fb và Lb đã xuất hiện, loại bỏ phần tử này
+                    } else {
+                        uniqueFbLbPairs.add(fbLbPair);
+                        return true;
+                    }
+                })
+                .toList();
+        ind = new ArrayList<>(distinct);
 
-        for (int i = 0; i < newPopulation.size(); i++) {
-            if(newPopulation.get(i).rank == 0) {
-                Utils.outJson(newPopulation.get(i), type, String.valueOf(i));
+        for (int i = 0; i < ind.size(); i++) {
+            if(ind.get(i).rank == 0) {
+                Utils.outJson(ind.get(i), type, String.valueOf(i));
             }
         }
     }

@@ -97,17 +97,14 @@ public class Main {
                 ag.createPopulation();
                 CommonService.createDic(Constants.pathOutput, nameDic);
                 ag.printPathToFile(Constants.pathOutput + nameDic + "/path.txt");
-                for (int i = 1; i < Constants.gSize; i++) {
+                for (int i = 1; i <= Constants.gSize; i++) {
+                    ag.hybrid();
+                    ag.mutation();
                     ag.evaluate(cloneGraph);
                     ag.divRankV2();
                     ag.filter();
-                    ag.hybrid();
-                    ag.mutation();
                 }
-                ag.evaluate(cloneGraph);
-                ag.divRankV2();
 //            ag.drawImg();
-                ag.filter();
                 ag.getIndRankZeroAfterFilter(nameDic);
 
             } catch (Exception e) {

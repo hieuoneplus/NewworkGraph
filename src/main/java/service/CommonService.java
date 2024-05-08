@@ -47,11 +47,24 @@ public class CommonService {
 
     /**
      * Calculate crounding-distance for individual in last rank
-     * @param list
+     * @param pop
      * @param slotLast
      * @return
      */
-    public static List<Individual> findCroundingDistance(List<Individual> list, int slotLast) {
+    public static List<Individual> findCroundingDistance(List<Individual> pop, int slotLast) {
+
+        Set<String> uniqueFbLbPairs = new HashSet<>();
+        var list = new ArrayList<>(pop.stream()
+                .filter(individual -> {
+                    String fbLbPair = individual.getLb() + "-" + individual.getRatioAccepted();
+                    if (uniqueFbLbPairs.contains(fbLbPair)) {
+                        return false; // Nếu cặp Fb và Lb đã xuất hiện, loại bỏ phần tử này
+                    } else {
+                        uniqueFbLbPairs.add(fbLbPair);
+                        return true;
+                    }
+                })
+                .toList());
 
         list.sort(Comparator.comparingDouble(Individual::getLb));
 
@@ -74,9 +87,23 @@ public class CommonService {
                 pt.crowdingDistance += ((list.get(list.indexOf(pt) + 1).Lb - list.get(list.indexOf(pt) - 1).Lb) / LbRange) + ((list.get(list.indexOf(pt) - 1).ratioAccepted - list.get(list.indexOf(pt) + 1).ratioAccepted) / AcceptedRange);
             });
         }
+        pop.parallelStream().forEachOrdered(pt -> {
+            list.parallelStream().forEachOrdered(dis -> {
+                if(dis.getLb() == pt.getLb() && dis.getRatioAccepted() == pt.getRatioAccepted()) {
+                    pt.setCrowdingDistance(dis.getCrowdingDistance());
+                }
+            });
+        });
+        pop.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
         list.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
-
-        return list.subList(0, slotLast);
+        if(list.size() >= slotLast) {
+            return list.subList(0, slotLast);
+        } else {
+            pop.removeAll(list);
+            var size = slotLast - list.size();
+            list.addAll(pop.subList(0, size));
+            return list;
+        }
     }
 
 
