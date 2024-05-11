@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/NetworkGraph.iml" filepath="$PROJECT_DIR$/NetworkGraph.iml" />
       <module fileurl="file://$PROJECT_DIR$/../VNF/VNF.iml" filepath="$PROJECT_DIR$/../VNF/VNF.iml" />
       <module fileurl="file://$PROJECT_DIR$/../javaintel/javaintel.iml" filepath="$PROJECT_DIR$/../javaintel/javaintel.iml" />
     </modules>

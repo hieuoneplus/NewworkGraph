@@ -8,7 +8,7 @@ public class Constants {
     public static String pathKPath = "src/main/resources/path/";
     public static int KSubPath = 10; // Number sub path in finding way for one request
     public static int numberPopulation = 50;
-    public static int KPath = 40;
+    public static int KPath = 5;
 
     public static double alpha = 0.5;
 

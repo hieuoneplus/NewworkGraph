@@ -36,7 +36,7 @@ public class NSGA_II {
             if (path != null) {
                 if (path.size() > 0) {
                     Random rann = new Random();
-                    var n = rann.nextInt(path.size());
+                    var n = rann.nextInt(path.size()+1);
                     arr.put(rq, n);
                     allPath.put(rq, path);
                 } else {
@@ -64,7 +64,7 @@ public class NSGA_II {
             groupRq.parallelStream().forEachOrdered(rq -> {
                 if (allPath.containsKey(rq)) {
                     Random rann = new Random();
-                    var n = rann.nextInt(allPath.get(rq).size());
+                    var n = rann.nextInt(allPath.get(rq).size()+1);
                     arr.put(rq, n);
                 }
             });

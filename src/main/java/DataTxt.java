@@ -34,7 +34,7 @@ public class DataTxt {
             if (files != null) {
                 for (File file : files) {
                     if (file.isFile() && file.getName().endsWith("network.txt")) {
-                        rs.put(file.getName(),getRequestPath(file.getName(),"30"));
+                        rs.put(file.getName(),getRequestPath(file.getName(),"10"));
                     }
                 }
             }

@@ -1,0 +1,21 @@
+Instance                      NSGA-II                  SL        GA                       SL        
+nsf_centers_0_10requests      0.30666666666666664      4         0.21699999999999997      4         Good                          
+nsf_centers_1_10requests      0.2456666666666667       2         0.168                    3         Good                          
+nsf_centers_2_10requests      0.242                    3         0.129                    3         Good                          
+nsf_centers_3_10requests      0.191                    2         0.138                    3         Good                          
+nsf_centers_4_10requests      0.30933333333333335      4         0.151                    3         Good                          
+nsf_rural_0_10requests        0.324                    5         0.20600000000000002      4         Good                          
+nsf_rural_1_10requests        0.32999999999999996      3         0.204                    4         Good                          
+nsf_rural_2_10requests        0.2786666666666667       2         0.24                     4         Good                          
+nsf_rural_3_10requests        0.31266666666666665      4         0.22800000000000004      4         Good                          
+nsf_rural_4_10requests        0.32233333333333336      3         0.22600000000000003      4         Good                          
+nsf_uniform_0_10requests      0.3506666666666667       4         0.28500000000000003      5         Good                          
+nsf_uniform_1_10requests      0.3416666666666667       3         0.30300000000000005      5         Good                          
+nsf_uniform_2_10requests      0.30933333333333335      3         0.20999999999999996      4         Good                          
+nsf_uniform_3_10requests      0.31733333333333336      4         0.30700000000000005      7         Good                          
+nsf_uniform_4_10requests      0.29000000000000004      3         0.059999999999999984     2         Good                          
+nsf_urban_0_10requests        0.3136666666666667       3         0.23500000000000001      4         Good                          
+nsf_urban_1_10requests        0.349                    3         0.15800000000000003      3         Good                          
+nsf_urban_2_10requests        0.34600000000000003      4         0.234                    5         Good                          
+nsf_urban_3_10requests        0.30433333333333334      4         0.30200000000000005      6         Good                          
+nsf_urban_4_10requests        0.3693333333333333       5         0.322                    5         Good                          

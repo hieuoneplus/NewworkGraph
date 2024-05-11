@@ -15,7 +15,8 @@ public class JsonParse {
                 // Sử dụng String.format() để căn chỉnh và in ra dữ liệu
                 System.out.printf("%-15s", value);
             }
-            System.out.println(); // Xuống dòng sau khi in xong mỗi hàng
+            String s = "xin hiếu";
+            System.out.println("xin hiếu"); // Xuống dòng sau khi in xong mỗi hàng
         }
     }
 }

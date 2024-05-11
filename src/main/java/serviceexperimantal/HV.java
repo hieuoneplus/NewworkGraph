@@ -23,6 +23,7 @@ public class HV {
     public static String pathNSGA_II = "src/main/java/data/output/NSGA-II/";
 
     public static String pathTest = "src/main/java/data/output/HV_result.txt";
+    public static int count = 0;
     public static double[] point = {0.0, 0.0};
 
     public static void main(String[] args) {
@@ -89,9 +90,10 @@ public class HV {
                         writer.write(String.format("%-25s",s2));
                         writer.write(String.format("%-10s",rsNSGA.size()));
                         writer.write(String.format("%-25s",s1));
-                        writer.write(String.format("%-10s",rsGA.size() + " root:"+gas.size()));
+                        writer.write(String.format("%-10s",rsGA.size()));
                         if(s2 > s1) {
                             writer.write(String.format("%-30s","Good"));
+                            count++;
                         } else {
                             writer.write(String.format("%-30s","Bad"));
                         }
@@ -101,10 +103,11 @@ public class HV {
                     }
                 });
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        System.out.println("Good: " + count);
 
     }
 
@@ -175,20 +178,20 @@ public class HV {
     }
 
     public static double calculateHypervolume(List<Individual> individuals, double[] referencePoint) {
-        individuals.sort(Comparator.comparingDouble(Individual::getLb)); // Sắp xếp theo giá trị Lb
+        individuals.sort(Comparator.comparingDouble(Individual::getLb).reversed()); // Sắp xếp theo giá trị Lb
         double hypervolume = 0.0;
         double prevFb = referencePoint[1];
-        for (int i = 0; i < individuals.size(); i++) {
+        for (int i=0;i<individuals.size();i++) {
             var ind = individuals.get(i);
-            if (i != individuals.size() - 1) {
-                var indLbPre = individuals.get(i + 1);
+            if(i != individuals.size()-1) {
+                var indLbPre = individuals.get(i+1);
                 double leng = Math.abs(indLbPre.getLb() - ind.getLb());
                 double width = Math.abs(prevFb - ind.getRatioAccepted());
-                hypervolume += leng * width;
+                hypervolume += leng*width;
             } else {
                 double leng = Math.abs(prevFb - ind.getLb());
                 double width = Math.abs(prevFb - ind.getRatioAccepted());
-                hypervolume += leng * width;
+                hypervolume += leng*width;
             }
         }
         return hypervolume;
