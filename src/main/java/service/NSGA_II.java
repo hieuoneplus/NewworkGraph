@@ -32,7 +32,7 @@ public class NSGA_II {
         Map<Request, Integer> arr = new HashMap<>();
         groupRq.parallelStream().forEachOrdered(rq -> {
             var cloneGraph = graph.copy();
-            var path = GetKPath.getV2(cloneGraph, rq);
+            var path = GetKPath.getV3(cloneGraph, rq);
             if (path != null) {
                 if (path.size() > 0) {
                     Random rann = new Random();

@@ -9,8 +9,8 @@ import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 
 public class Experimental {
-    public static String out = "src/main/java/data/output/GA/";
-    public static String raw = "src/main/java/data/output/GAraw";
+    public static String out = "src/main/java/data/output/GAk40/";
+    public static String raw = "src/main/java/data/output/GAk40raw/";
     public static void main(String[] args) {
         copy();
     }
@@ -30,7 +30,7 @@ public class Experimental {
     }
 
     public static void createNewDicGA() {
-        String rootPath = raw+"/0.1";
+        String rootPath = raw+"0.1";
         String outPath = out;
         File rootDir = new File(rootPath);
         File outDir = new File(outPath);

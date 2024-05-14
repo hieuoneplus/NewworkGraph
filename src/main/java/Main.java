@@ -80,9 +80,9 @@ public class Main {
         CommonService.createDic(Constants.pathOutput,"");
         input.entrySet().parallelStream().forEach(entry -> {
             try {
-                String nameDic = entry.getValue().substring(0, entry.getValue().indexOf(".txt"));
-                var graph = DataTxt.getNetwork(entry.getKey());
-                var requests = DataTxt.getRequest(entry.getValue());
+                String nameDic = entry.getKey().substring(0, entry.getKey().indexOf(".txt"));
+                var graph = DataTxt.getNetwork(entry.getValue());
+                var requests = DataTxt.getRequest(entry.getKey());
                 requests.sort(Comparator.comparingDouble(request -> {
                     double wCpu = 1.0;
                     double wMemory = 1.0;
