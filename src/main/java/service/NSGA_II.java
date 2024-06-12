@@ -1,10 +1,7 @@
 package service;
 
 import config.Constants;
-import model.Individual;
-import model.NetworkGraph;
-import model.Request;
-import model.Vertex;
+import model.*;
 import org.knowm.xchart.*;
 import service.CommonService;
 
@@ -12,25 +9,22 @@ import java.io.*;
 import java.util.*;
 
 public class NSGA_II {
+    public List<Request> groupRq;
 
-    public static Random ran = new Random();
+    public List<Individual> ind = new ArrayList<>();
+    public List<Individual> newPopulation = new ArrayList<>();
 
-    public static List<Request> groupRq;
+    public Map<Request, List<List<Vertex>>> allPath = new HashMap<>();
 
-    public static List<Individual> ind = new ArrayList<>();
-    public static List<Individual> newPopulation = new ArrayList<>();
+    public List<Map<Request, Integer>> tapnghiem = new ArrayList<>();
 
-    public static Map<Request, List<List<Vertex>>> allPath = new HashMap<>();
+    public int allRequest = 0;
 
-    public static List<Map<Request, Integer>> tapnghiem = new ArrayList<>();
-
-    public static int allRequest = 0;
-
-    public static List<Request> cloneGr;
-    public static List<Individual> copyGen;
+    public List<Request> cloneGr;
+    public List<Individual> copyGen;
 
     // Khoi tao ca the dau tien va cac duong di cua cac request
-    public static void createFirstInd(NetworkGraph graph, List<Request> group) {
+    public void createFirstInd(NetworkGraph graph, List<Request> group) {
         groupRq = new ArrayList<>(group);
         cloneGr = new ArrayList<>(group);
         allRequest = group.size();
@@ -38,11 +32,11 @@ public class NSGA_II {
         Map<Request, Integer> arr = new HashMap<>();
         groupRq.parallelStream().forEachOrdered(rq -> {
             var cloneGraph = graph.copy();
-            var path = GetKPath.getV2(cloneGraph, rq);
+            var path = GetKPath.getV3(cloneGraph, rq);
             if (path != null) {
-                if(path.size()>0) {
+                if (path.size() > 0) {
                     Random rann = new Random();
-                    var n = rann.nextInt(path.size());
+                    var n = rann.nextInt(path.size()+1);
                     arr.put(rq, n);
                     allPath.put(rq, path);
                 } else {
@@ -52,7 +46,7 @@ public class NSGA_II {
                 cloneGr.remove(rq);
             }
         });
-        if(!tapnghiem.contains(arr)) {
+        if (!tapnghiem.contains(arr)) {
             individual.setOption(arr);
             ind.add(individual);
             tapnghiem.add(arr);
@@ -62,19 +56,19 @@ public class NSGA_II {
     }
 
     // khoi tao quan the
-    public static void createPopulation() {
+    public void createPopulation() {
         int j = 0;
-        for(int i=2; i<= Constants.numberPopulation;) {
+        for (int i = 2; i <= Constants.numberPopulation; ) {
             Individual individual = new Individual();
             Map<Request, Integer> arr = new HashMap<>();
             groupRq.parallelStream().forEachOrdered(rq -> {
-                if(allPath.containsKey(rq)) {
+                if (allPath.containsKey(rq)) {
                     Random rann = new Random();
-                    var n = rann.nextInt(allPath.get(rq).size());
+                    var n = rann.nextInt(allPath.get(rq).size()+1);
                     arr.put(rq, n);
                 }
             });
-            if(!tapnghiem.contains(arr)) {
+            if (!tapnghiem.contains(arr)) {
                 individual.setOption(arr);
                 ind.add(individual);
                 tapnghiem.add(arr);
@@ -82,46 +76,70 @@ public class NSGA_II {
             } else {
                 j++;
             }
-            if(j == Constants.outLoop) {
+            if (j == Constants.outLoop) {
                 break;
             }
         }
     }
 
     // danh gia ca the: Fx, Lb, RatioAccepted
-    public static void evaluate(NetworkGraph cloneGraph) {
+    public void evaluate(NetworkGraph cloneGraph) {
 
         ind.parallelStream().forEach(duyet -> {
+            Map<Request, Boolean> isAccepted = new HashMap<>();
 //            for(var duyet : ind) {
-                double count = 0.0;
-                NetworkGraph temp = cloneGraph.copy();
-                for (var rq : groupRq) {
-                    NetworkGraph temp1 = temp.copy();
-                    var index = duyet.getOption().get(rq);
-                    if(index!=null && allPath.get(rq) != null) {
-                        var size = allPath.get(rq).size();
-                        if(index < size) {
-                            if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index))) {
-                                count++;
-                            } else {
-                                temp = temp1; // Gán lại giá trị cho mảng tempGraph
-                            }
+            double count = 0.0;
+            NetworkGraph temp = cloneGraph.copy();
+            for (var rq : groupRq) {
+                NetworkGraph temp1 = temp.copy();
+                var index = duyet.getOption().get(rq);
+                if (index != null && allPath.get(rq) != null) {
+                    var size = allPath.get(rq).size();
+                    if (index < size) {
+                        if (CommonService.updateStatusNetwork(temp, rq, allPath.get(rq).get(index))) {
+                            isAccepted.put(rq, true);
+                            count++;
+                        } else {
+                            isAccepted.put(rq, false);
+                            temp = temp1; // Gán lại giá trị cho mảng tempGraph
                         }
+                    } else {
+                        isAccepted.put(rq, false);
                     }
-
                 }
-                var Lb = (temp.allMemory / cloneGraph.allMemory + temp.allCpu / cloneGraph.allCpu + temp.allBandwidth / cloneGraph.allBandwidth) / 3.0;
-                var ratioAccepted = count / ((double) allRequest);
-                duyet.setLb(Lb);
-                duyet.setRatioAccepted(ratioAccepted);
-                duyet.setFx((Constants.alpha * Lb) + (Constants.alpha * ratioAccepted));
+
+            }
+
+            Optional<Vertex> vc = temp.vertexMap.values()
+                    .parallelStream()
+                    .filter(vertex -> vertex.isServer)
+                    .max(Comparator.comparingDouble(Vertex::getUseCpu));
+
+            var rs2 = temp.getVertex(vc.get().label).useCpu / cloneGraph.getVertex(vc.get().label).cpu;
+
+            Optional<Vertex> vm = temp.vertexMap.values()
+                    .parallelStream()
+                    .filter(vertex -> !vertex.isServer)
+                    .max(Comparator.comparingDouble(Vertex::getUseMem));
+            var rs3 = temp.getVertex(vm.get().label).useMem / cloneGraph.getVertex(vm.get().label).memory;
+
+            Optional<Edge> e = temp.list
+                    .parallelStream()
+                    .max(Comparator.comparingDouble(Edge::getUseBand));
+            var rs1 = e.get().getUseBand() / cloneGraph.edgeMap.get(cloneGraph.getVertex(e.get().v1)).get(cloneGraph.getVertex(e.get().v2)).getBandwidth();
+            var Lb = 1.0 - ((rs1 + rs2 + rs3) / 3.0);
+            var ratioAccepted = count / ((double) allRequest);
+            duyet.setLb(Lb);
+            duyet.setRatioAccepted(ratioAccepted);
+            duyet.setFx((Constants.alpha * Lb) + ((1 - Constants.alpha) * ratioAccepted));
+            duyet.setAccepted(isAccepted);
 //            }
         });
     }
 
 
     //chia rank
-    public static void divRank() {
+    public void divRank() {
         int rank = 0;
         List<Individual> temp = new ArrayList<>();
         while (!ind.isEmpty()) {
@@ -131,10 +149,10 @@ public class NSGA_II {
         }
         ind.addAll(temp);
 
-        CommonService.Print(ind);
+//        CommonService.Print(ind);
     }
 
-    public static void divRankV2() {
+    public void divRankV2() {
         int rank = 0;
         List<Individual> temp = new ArrayList<>();
         while (!ind.isEmpty()) {
@@ -144,66 +162,67 @@ public class NSGA_II {
         }
         ind.addAll(temp);
 
-        CommonService.Print(ind);
+//        CommonService.Print(ind);
+
     }
 
 
     //chon loc ca the
-    public static void filter() {
-            int rank = 0;
-            int sum = 0;
-            int slotLast = 0;
-            boolean notFound = false;
-            List<Individual> last = new ArrayList<>();
-            do {
-                var listRank = CommonService.findInRank(ind, rank);
-                if(listRank.size()==0) {
-                    notFound = true;
-                }
-                sum+=listRank.size();
-                if(sum <= Constants.numberPopulation) {
-                    newPopulation.addAll(listRank);
-                    rank++;
-                } else {
-                    last = listRank;
-                    slotLast = Constants.numberPopulation - newPopulation.size();
-                }
-            } while (sum < Constants.numberPopulation && !notFound);
-            if(slotLast != 0) {
-                newPopulation.addAll(CommonService.findCroundingDistance(last, slotLast));
+    public void filter() {
+        int rank = 0;
+        int sum = 0;
+        int slotLast = 0;
+        boolean notFound = false;
+        List<Individual> last = new ArrayList<>();
+        do {
+            var listRank = CommonService.findInRank(ind, rank);
+            if (listRank.size() == 0) {
+                notFound = true;
             }
-
-            //reset evalute
-            newPopulation.parallelStream().forEach(pt -> {
-                pt.setRank(0);
-                pt.setCrowdingDistance(0.0);
-            });
-        ind.clear();
-
+            sum += listRank.size();
+            if (sum <= Constants.numberPopulation) {
+                newPopulation.addAll(listRank);
+                rank++;
+            } else {
+                last = listRank;
+                slotLast = Constants.numberPopulation - newPopulation.size();
+            }
+        } while (sum < Constants.numberPopulation && !notFound);
+        if (slotLast != 0) {
+            newPopulation.addAll(CommonService.findCroundingDistance(last, slotLast));
+        }
+        ind = new ArrayList<>(newPopulation);
+        newPopulation.clear();
+        ind.parallelStream().forEach(pt -> {
+            pt.setRank(0);
+            pt.setCrowdingDistance(0.0);
+        });
     }
 
     // lai ghep
-    public static void hybrid() {
-        tapnghiem.clear();
-        newPopulation.parallelStream().forEachOrdered(individual -> {
-            tapnghiem.add(individual.getOption());
-        });
-        newPopulation.parallelStream().forEachOrdered(pt -> {
+    public void hybrid() {
+        //reset evalute
+//        newPopulation.parallelStream().forEach(pt -> {
+//            pt.setRank(0);
+//            pt.setCrowdingDistance(0.0);
+//        });
+
+        ind.parallelStream().forEachOrdered(pt -> {
             Random rnn = new Random();
-            if(rnn.nextInt(100)<Constants.ratioHyrid) {
+            if (rnn.nextInt(100) < Constants.ratioHyrid) {
                 int out = 0;
-                int cha = newPopulation.indexOf(pt);
+                int cha = ind.indexOf(pt);
                 int me;
                 do {
-                    me = rnn.nextInt(newPopulation.size());
+                    me = rnn.nextInt(ind.size());
                     out++;
-                    if(out==Constants.outLoop) {
+                    if (out == Constants.outLoop) {
                         break;
                     }
                 } while (me == cha);
 
-                var dad = newPopulation.get(cha);
-                var mom = newPopulation.get(me);
+                var dad = ind.get(cha);
+                var mom = ind.get(me);
 
 
                 Individual in1 = new Individual();
@@ -224,29 +243,29 @@ public class NSGA_II {
                 if (!tapnghiem.contains(map1)) {
                     tapnghiem.add(map1);
                     in1.setOption(map1);
-                    ind.add(in1);
+                    newPopulation.add(in1);
                 }
                 if (!tapnghiem.contains(map2)) {
                     tapnghiem.add(map2);
                     in2.setOption(map2);
-                    ind.add(in2);
+                    newPopulation.add(in2);
                 }
             }
         });
-        copyGen = new ArrayList<>(ind);
+        copyGen = new ArrayList<>(newPopulation);
 
     }
 
     //dot bien
-    public static void mutation() {
+    public void mutation() {
         copyGen.parallelStream().forEachOrdered(pt -> {
             Random rann = new Random();
-            if(rann.nextInt(100) <= Constants.ratioMutation) {
+            if (rann.nextInt(100) <= Constants.ratioMutation) {
                 var bit = rann.nextInt(groupRq.size());
                 int bitTemp;
                 do {
                     bitTemp = rann.nextInt(groupRq.size());
-                } while(bit == bitTemp);
+                } while (bit == bitTemp);
                 var index = rann.nextInt(allPath.get(groupRq.get(bit)).size());
                 var indexSwap = rann.nextInt(allPath.get(groupRq.get(bitTemp)).size());
                 Individual evol = new Individual();
@@ -254,9 +273,9 @@ public class NSGA_II {
                 evol.getOption().put(groupRq.get(bit), index);
                 evol.getOption().put(groupRq.get(bitTemp), indexSwap);
 
-                if(!tapnghiem.contains(evol.getOption())) {
+                if (!tapnghiem.contains(evol.getOption())) {
                     tapnghiem.add(evol.getOption());
-                    ind.add(evol);
+                    newPopulation.add(evol);
                 }
             }
 
@@ -265,33 +284,36 @@ public class NSGA_II {
         newPopulation.clear();
     }
 
-    public static void drawImg() {
+    public void drawImg() {
         XYChart chart = new XYChartBuilder().width(800).height(600).title("Pareto").xAxisTitle("RatioAccepted").yAxisTitle("Lb").build();
         chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Scatter);
 
         int rank = 0;
-        for(var i : ind) {
-            if(i.rank == rank) {
-                List<Double> Lb = new ArrayList<>();
-                List<Double> ratio = new ArrayList<>();
-                CommonService.draw(ind, Lb, ratio, rank);
+        while (true) {
 
-                // Thêm dữ liệu vào biểu đồ
-
-                    // Nếu không phải lần lặp đầu tiên, nối điểm hiện tại với điểm trước đó
-                chart.addSeries("Rank " + rank, ratio, Lb);//.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-
-
-                rank++;
+            List<Double> Lb = new ArrayList<>();
+            List<Double> ratio = new ArrayList<>();
+            CommonService.draw(ind, Lb, ratio, rank);
+            if(Lb.size() <= 0) {
+                break;
             }
+            // Thêm dữ liệu vào biểu đồ
+
+            // Nếu không phải lần lặp đầu tiên, nối điểm hiện tại với điểm trước đó
+            chart.addSeries("Rank " + rank, ratio, Lb);//.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+
+
+            rank++;
+
         }
         new SwingWrapper<>(chart).displayChart();
 
     }
-    public static void printPathToFile(String filePath) {
+
+    public void printPathToFile(String filePath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (var rq : groupRq) {
-                if(allPath.containsKey(rq)) {
+                if (allPath.containsKey(rq)) {
                     // In ra ID của yêu cầu
                     writer.write("Request id " + rq.getId());
                     writer.newLine();
@@ -306,6 +328,51 @@ public class NSGA_II {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void setViewAfterFilter() {
+        ind.parallelStream().forEachOrdered(individual -> {
+            Map<Request, String> view = new HashMap<>();
+            individual.getOption().keySet().parallelStream().forEach(key -> {
+                var index = individual.getOption().get(key);
+                var size = allPath.get(key).size();
+                if (index < size) {
+                    var path = allPath.get(key).get(index);
+                    if (path != null) {
+                        if (individual.getAccepted().get(key)) {
+                            ArrayList<String> ad = new ArrayList<>();
+                            for (int each = 0; each < path.size(); each++) {
+                                ad.add(path.get(each).label);
+                            }
+                            view.put(key, ad.toString());
+                        }
+                    }
+                }
+            });
+            individual.setView(view);
+        });
+    }
+    public void getIndRankZeroAfterFilter(String type) {
+        setViewAfterFilter();
+        Set<String> uniqueFbLbPairs = new HashSet<>();
+        List<Individual> distinct = ind.stream()
+                .filter(individual -> {
+                    String fbLbPair = individual.getLb() + "-" + individual.getRatioAccepted();
+                    if (uniqueFbLbPairs.contains(fbLbPair)) {
+                        return false; // Nếu cặp Fb và Lb đã xuất hiện, loại bỏ phần tử này
+                    } else {
+                        uniqueFbLbPairs.add(fbLbPair);
+                        return true;
+                    }
+                })
+                .toList();
+        ind = new ArrayList<>(distinct);
+
+        for (int i = 0; i < ind.size(); i++) {
+            if(ind.get(i).rank == 0) {
+                Utils.outJson(ind.get(i), type, String.valueOf(i));
+            }
         }
     }
 }

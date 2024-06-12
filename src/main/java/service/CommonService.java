@@ -1,12 +1,16 @@
 package service;
 
 import model.*;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class CommonService {
+
+
     public static void draw(List<Individual> list, List<Double> Lb, List<Double> ratio, int rank) {
         for(int i=0; i<list.size();i++) {
             if(list.get(i).rank == rank) {
@@ -31,7 +35,7 @@ public class CommonService {
         ind.parallelStream().forEachOrdered(pt -> {
             if(pt.getRank() == 0) {
 //                if(pt.Lb == 1.0) {
-                    System.out.print(pt.getOption().values() + " ");
+//                    System.out.print(pt.getOption().values() + " ");
 //                }
                 System.out.print(Math.round(pt.getFx()*10000.0)/10000.0 + " ");
 
@@ -43,33 +47,63 @@ public class CommonService {
 
     /**
      * Calculate crounding-distance for individual in last rank
-     * @param list
+     * @param pop
      * @param slotLast
      * @return
      */
-    public static List<Individual> findCroundingDistance(List<Individual> list, int slotLast) {
+    public static List<Individual> findCroundingDistance(List<Individual> pop, int slotLast) {
+
+        Set<String> uniqueFbLbPairs = new HashSet<>();
+        var list = new ArrayList<>(pop.stream()
+                .filter(individual -> {
+                    String fbLbPair = individual.getLb() + "-" + individual.getRatioAccepted();
+                    if (uniqueFbLbPairs.contains(fbLbPair)) {
+                        return false; // Nếu cặp Fb và Lb đã xuất hiện, loại bỏ phần tử này
+                    } else {
+                        uniqueFbLbPairs.add(fbLbPair);
+                        return true;
+                    }
+                })
+                .toList());
 
         list.sort(Comparator.comparingDouble(Individual::getLb));
 
-        list.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
-        list.get(list.size() - 1).setCrowdingDistance(Double.POSITIVE_INFINITY);
-
+        List<Individual> bien = list.parallelStream()
+                .filter(individual -> individual.getLb() == list.get(list.size() - 1).getLb() || individual.getLb() == list.get(0).getLb())
+                .map(individual -> {
+                    individual.setCrowdingDistance(Double.POSITIVE_INFINITY);
+                    return individual;
+                })
+                .toList();
 
         var LbRange = list.get(list.size()-1).getLb() - list.get(0).getLb();
         var AcceptedRange = list.get(0).getRatioAccepted() - list.get(list.size()-1).getRatioAccepted();
 
         var cloneList = new ArrayList<>(list);
         cloneList.sort(Comparator.comparingDouble(Individual::getLb));
-        cloneList.remove(cloneList.get(0));
-        cloneList.remove(cloneList.get(cloneList.size()-1));
+        cloneList.removeAll(bien);
         if(!cloneList.isEmpty()) {
             cloneList.parallelStream().forEachOrdered(pt -> {
                 pt.crowdingDistance += ((list.get(list.indexOf(pt) + 1).Lb - list.get(list.indexOf(pt) - 1).Lb) / LbRange) + ((list.get(list.indexOf(pt) - 1).ratioAccepted - list.get(list.indexOf(pt) + 1).ratioAccepted) / AcceptedRange);
             });
         }
+        pop.parallelStream().forEachOrdered(pt -> {
+            list.parallelStream().forEachOrdered(dis -> {
+                if(dis.getLb() == pt.getLb() && dis.getRatioAccepted() == pt.getRatioAccepted()) {
+                    pt.setCrowdingDistance(dis.getCrowdingDistance());
+                }
+            });
+        });
+        pop.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
         list.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
-
-        return list.subList(0, slotLast);
+        if(list.size() >= slotLast) {
+            return list.subList(0, slotLast);
+        } else {
+            pop.removeAll(list);
+            var size = slotLast - list.size();
+            list.addAll(pop.subList(0, size));
+            return list;
+        }
     }
 
 
@@ -125,7 +159,7 @@ public class CommonService {
         var rs = list.parallelStream()
                 .filter(pt -> list.stream().noneMatch(other -> dominates(other, pt)))
                 .collect(Collectors.toList());
-        rs.parallelStream().forEachOrdered(pt -> {
+        rs.parallelStream().forEach(pt -> {
             pt.setRank(rank);
         });
         return rs;
@@ -150,21 +184,23 @@ public class CommonService {
 
         var firstVertex = cloneGraph.getVertex(pathResolve.poll().getLabel());
         if(firstVertex.getFunction().contains(vnf.peek())) {
-            if(firstVertex.getCpu() >= rq.getCpu() && firstVertex.getMemory() >= rq.getMemory()) {
+            if(firstVertex.getCpu() >= rq.getCpu()) {
                 firstVertex.setCpu(firstVertex.getCpu() - rq.getCpu());
+                firstVertex.useCpu += rq.getCpu();
                 cloneGraph.allCpu -= rq.getCpu();
-                firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
-                cloneGraph.allMemory -= rq.getMemory();
                 vnf.poll();
             } else {
                 return false;
             }
         } else {
-            if(firstVertex.getMemory() >= rq.getMemory()) {
-                firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
-                cloneGraph.allMemory -= rq.getMemory();
-            } else {
-                return false;
+            if(!firstVertex.isServer) {
+                if (firstVertex.getMemory() >= rq.getMemory()) {
+                    firstVertex.setMemory(firstVertex.getMemory() - rq.getMemory());
+                    firstVertex.useMem += rq.getMemory();
+                    cloneGraph.allMemory -= rq.getMemory();
+                } else {
+                    return false;
+                }
             }
         }
         vertexConnect.push(firstVertex);
@@ -174,21 +210,23 @@ public class CommonService {
 
 
             if(vertex.getFunction().contains(vnf.peek())) {
-                if(vertex.getCpu() >= rq.getCpu() && vertex.getMemory() >= rq.getMemory()) {
+                if(vertex.getCpu() >= rq.getCpu()) {
                     vertex.setCpu(vertex.getCpu() - rq.getCpu());
+                    vertex.useCpu += rq.getCpu();
                     cloneGraph.allCpu -= rq.getCpu();
-                    vertex.setMemory(vertex.getMemory() - rq.getMemory());
-                    cloneGraph.allMemory -= rq.getMemory();
                     vnf.poll();
                 } else {
                     return false;
                 }
             } else {
-                if(vertex.getMemory() >= rq.getMemory()) {
-                    vertex.setMemory(vertex.getMemory() - rq.getMemory());
-                    cloneGraph.allMemory -= rq.getMemory();
-                } else {
-                    return false;
+                if(!vertex.isServer) {
+                    if (vertex.getMemory() >= rq.getMemory()) {
+                        vertex.setMemory(vertex.getMemory() - rq.getMemory());
+                        vertex.useMem += rq.getMemory();
+                        cloneGraph.allMemory -= rq.getMemory();
+                    } else {
+                        return false;
+                    }
                 }
             }
             if(vertexConnect.size()>0) {
@@ -201,6 +239,7 @@ public class CommonService {
                             if (edge.getBandwidth() >= rq.getBandwidth()) {
                                 edge.setBandwidth(edge.getBandwidth() - rq.getBandwidth());
                                 listEdge.add(edge);
+                                edge.useBand += rq.getBandwidth();
                                 cloneGraph.allBandwidth -= rq.getBandwidth();
                             }
                         } catch (NullPointerException e) {
@@ -234,5 +273,17 @@ public class CommonService {
             System.out.println("node " + c.getKey().label + " " + hieu);
 
         }
+    }
+    public static void createDic(String path, String dic) {
+        File directory = new File(path.concat(dic));
+        if (directory.exists()) {
+            try {
+                FileUtils.deleteDirectory(directory);
+            } catch (Exception e) {
+
+            }
+        }
+        directory.mkdir();
+
     }
 }

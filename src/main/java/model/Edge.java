@@ -13,10 +13,13 @@ public class Edge {
     public String v1;
     @JsonProperty("v2")
     public String v2;
+
+    public double useBand;
     public Edge(String v1, String v2, double bandwidth) {
         this.bandwidth = bandwidth;
         this.v1 = v1;
         this.v2 = v2;
+        useBand = 0.0;
     }
     public double getBandwidth() {
         return bandwidth;
@@ -37,10 +40,20 @@ public class Edge {
         this.v2 = v2;
     }
 
+    public double getUseBand() {
+        return useBand;
+    }
+
+    public void setUseBand(double useBand) {
+        this.useBand = useBand;
+    }
+
     public Edge copy() {
         String newV1 = this.v1;
         String newV2 = this.v2;
-        return new Edge(newV1, newV2, this.bandwidth);
+        Edge e = new Edge(newV1, newV2, this.bandwidth);
+        e.useBand = this.useBand;
+        return e;
     }
 }
  

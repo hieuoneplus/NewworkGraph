@@ -1,4 +1,5 @@
 
+import config.Constants;
 import model.NetworkGraph;
 import model.Request;
 import service.*;
@@ -47,7 +48,6 @@ public class Main {
 //        graph.addEdge("8", "9", 40.0);
 
 
-
 //        ListRequest requests = null;
 //        GraphInput input = null;
 //        ObjectMapper mapper = new ObjectMapper();
@@ -74,35 +74,43 @@ public class Main {
 //            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
 //        }));
 
-        var graph = DataTxt.getNetwork("src/main/resources/network/cogent_rural_1_network.txt");
-        var requests = DataTxt.getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
-        requests.sort(Comparator.comparingDouble(request -> {
-            double wCpu = 1.0;
-            double wMemory = 1.0;
-            double wBandwidth = 1.0;
 
-            // Tính tổng tài nguyên theo công thức
-            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
-        }));
-        var cloneGraph = graph.copy();
-//        FindPath f = new FindPath();
-//
-////        GetKPath.getOnePath(f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("7"), graph.vertexMap.get("6")));
-//        GetKPath.getMorePathV2(f.yenKLargestBandwidthPathsV2(graph, new Request(), 100, "No", f.dijkstraShortestPath(graph,new Request(), graph.vertexMap.get("1"), graph.vertexMap.get("5"))));
+        var input = DataTxt.getInput();
 
-        NSGA_II.createFirstInd(graph, requests);
-        NSGA_II.createPopulation();
-        NSGA_II.printPathToFile("src/main/resources/path.txt");
-        for(int i=0;i<100;i++) {
-            NSGA_II.evaluate(cloneGraph);
-            NSGA_II.divRankV2();
-            NSGA_II.filter();
-            NSGA_II.hybrid();
-            NSGA_II.mutation();
-        }
-        NSGA_II.evaluate(cloneGraph);
-        NSGA_II.divRankV2();
-        NSGA_II.drawImg();
+        CommonService.createDic(Constants.pathOutput,"");
+        input.entrySet().parallelStream().forEach(entry -> {
+            try {
+                String nameDic = entry.getKey().substring(0, entry.getKey().indexOf(".txt"));
+                var graph = DataTxt.getNetwork(entry.getValue());
+                var requests = DataTxt.getRequest(entry.getKey());
+                requests.sort(Comparator.comparingDouble(request -> {
+                    double wCpu = 1.0;
+                    double wMemory = 1.0;
+                    double wBandwidth = 1.0;
+
+                    // Tính tổng tài nguyên theo công thức
+                    return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
+                }));
+                var cloneGraph = graph.copy();
+                NSGA_II ag = new NSGA_II();
+                ag.createFirstInd(graph, requests);
+                ag.createPopulation();
+                CommonService.createDic(Constants.pathOutput, nameDic);
+                ag.printPathToFile(Constants.pathOutput + nameDic + "/path.txt");
+                for (int i = 1; i <= Constants.gSize; i++) {
+                    ag.hybrid();
+                    ag.mutation();
+                    ag.evaluate(cloneGraph);
+                    ag.divRankV2();
+                    ag.filter();
+                }
+//            ag.drawImg();
+                ag.getIndRankZeroAfterFilter(nameDic);
+
+            } catch (Exception e) {
+                System.out.println("error: " + entry.getKey());
+            }
+        });
 
     }
 }

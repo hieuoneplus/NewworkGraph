@@ -1,62 +1,49 @@
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import model.NetworkGraph;
-import model.Request;
-import service.CommonService;
-import service.GetKPath;
+import org.knowm.xchart.*;
+import org.knowm.xchart.style.Styler;
+import org.knowm.xchart.style.markers.SeriesMarkers;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Comparator;
+import javax.swing.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class JsonParse {
 
     public static void main(String[] args) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            // Đọc tệp JSON vào một đối tượng model.Request
-            Request request = mapper.readValue(new File("src/main/resources/graph.json"), new TypeReference<Request>() {
-            });
 
-            // Sử dụng đối tượng request theo cách bình thường
-            System.out.println("Start: " + request.getStart());
-            System.out.println("End: " + request.getEnd());
-            System.out.println("VNF: " + request.getVNF());
-            System.out.println("CPU: " + request.getCpu());
-            System.out.println("Memory: " + request.getMemory());
-            System.out.println("Bandwidth: " + request.getBandwidth());
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Create Chart
+        XYChart chart = new XYChartBuilder().width(800).height(600).title("Biểu đồ đường").xAxisTitle("X").yAxisTitle("Y").build();
+
+        // Customize Chart
+        chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+        chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+        chart.getStyler().setPlotGridLinesVisible(true);
+        chart.getStyler().setXAxisLabelRotation(60);
+
+        // Series data
+        String[] xData = new String[]{"AVDCSDFDSaaaaaaaaaaaa", "B", "C", "D", "E", "F", "G", "H"};
+        double[] yData = new double[]{1, 4, 3, 5, 5, 7, 7, 8};
+
+        // Create a Function for the string labels
+        Function<Double, String> xAxisLabelFunction = d -> {
+            int index = d.intValue();
+            return xData[index];
+        };
+
+        // Convert string X data to numeric values
+        double[] xNumericData = new double[xData.length];
+        for (int i = 0; i < xData.length; i++) {
+            xNumericData[i] = (double) i;
         }
 
+        // Add series to chart
+        XYSeries series = chart.addSeries("Dữ liệu 1", xNumericData, yData);
+        series.setMarker(SeriesMarkers.CIRCLE);
 
+        // Customize X-Axis labels to use the string labels
+        chart.setCustomXAxisTickLabelsFormatter(xAxisLabelFunction);
 
-        ///////////////////////////
-        var graph = DataTxt.getNetwork("src/main/resources/network/cogent_centers_4_network.txt");
-        var requests = DataTxt.getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
-        requests.sort(Comparator.comparingDouble(request -> {
-            double wCpu = 1.0;
-            double wMemory = 1.0;
-            double wBandwidth = 1.0;
-
-            // Tính tổng tài nguyên theo công thức
-            return (request.getCpu() * wCpu) + (request.getMemory() * wMemory) + (request.getBandwidth() * wBandwidth);
-        }));
-
-        NetworkGraph cloneGraph = graph.copy();
-        Request rq = null;
-        for(var pt : requests) {
-            if (pt.getId().equals("11")) {
-                rq = pt;
-                break;
-            }
-        }
-        var tes = GetKPath.getV2(graph, rq);
-        for(var c : tes)
-            CommonService.updateStatusNetwork(cloneGraph, rq , c);
-        GetKPath.getMorePathV2(tes);
-
-
+        // Show it
+        new SwingWrapper<>(chart).displayChart();
     }
-
 }

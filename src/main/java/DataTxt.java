@@ -1,3 +1,4 @@
+import config.Constants;
 import model.NetworkGraph;
 import model.Request;
 
@@ -10,7 +11,45 @@ public class DataTxt {
 //        getNetwork("src/main/resources/network/cogent_centers_4_network.txt");
 //        getRequest("src/main/resources/request/cogent_rural_1_30requests.txt");
 //    }
+
+    public static String getRequestPath(String networkName, String numRequest) {
+
+        String cutString = networkName.substring(0, networkName.indexOf("network"));
+
+        // Chuỗi cần nối
+        String appendString = numRequest.concat("requests.txt");
+
+        // Nối chuỗi đã cắt với chuỗi mới
+        return cutString + appendString;
+    }
+    public static Map<String, String> getInput() {
+        Map<String,String> rs = new HashMap<>();
+        String directoryPath = Constants.pathInput;
+
+        File directory = new File(directoryPath);
+
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile() && file.getName().endsWith("network.txt")) {
+                        rs.put(getRequestPath(file.getName(), "10"), file.getName());
+                        rs.put(getRequestPath(file.getName(), "20"), file.getName());
+                        rs.put(getRequestPath(file.getName(), "30"), file.getName());
+                    }
+                }
+            }
+        } else {
+            System.out.println("Đường dẫn không phải là một thư mục.");
+        }
+        return rs;
+    }
+
+
     public static List<Request> getRequest(String path) {
+        String directoryPath = Constants.pathInput;
+        path = directoryPath.concat(path);
         List<Request> rqs = new ArrayList<>();
         File file = new File(path);
         try {
@@ -38,6 +77,8 @@ public class DataTxt {
         }
     }
     public static NetworkGraph getNetwork(String path) {
+        String directoryPath = Constants.pathInput;
+        path = directoryPath.concat(path);
         NetworkGraph graph = new NetworkGraph();
         File file = new File(path);
         try {
@@ -59,7 +100,7 @@ public class DataTxt {
 
                     // Tạo ArrayList từ mảng phần tử đã tách
                     vnf = new ArrayList<>(Arrays.asList(elementsArray));
-                    graph.addVertex(label,vnf,Double.parseDouble(cpu), Double.parseDouble(cpu));
+                    graph.addVertex(label,vnf,0.0, Double.parseDouble(cpu));
                 } else {
                     graph.addVertex(label, vnf, Double.parseDouble(cpu), 0.0);
                 }
